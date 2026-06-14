@@ -36,7 +36,7 @@ let currentUser = null;
 let googleAccessToken = null;
 let portalOrdersUnsubscribe = null;
 
-const SHOP_OWNER_EMAIL = 'gohilriteshs@gmail.com';
+const SHOP_OWNER_EMAIL = 'support@jalaramcomputers.com';
 
 function isShopOwner(user = currentUser) {
   const email = user?.email?.toLowerCase?.();
@@ -662,6 +662,8 @@ async function initFirebase() {
           remoteProducts.push(d.data());
         });
 
+        remoteProducts = normalizeProductsCatalog(remoteProducts);
+
         // Ensure newly entered products always show first by sorting by creation timestamp
         remoteProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         
@@ -818,7 +820,7 @@ function openGoogleSandboxModal(onSuccess) {
         <div class="space-y-3 pt-2">
           <div>
             <label class="block text-[10px] uppercase font-bold tracking-wider text-warm-gray mb-1">Email Address</label>
-            <input type="email" id="sandbox-google-email" class="w-full border border-silver-light px-3 py-2 text-xs font-sans text-primary focus:outline-none focus:border-accent" value="gohilriteshs@gmail.com">
+            <input type="email" id="sandbox-google-email" class="w-full border border-silver-light px-3 py-2 text-xs font-sans text-primary focus:outline-none focus:border-accent" value="support@jalaramcomputers.com">
           </div>
           <div>
             <label class="block text-[10px] uppercase font-bold tracking-wider text-warm-gray mb-1">Full Name</label>
@@ -841,7 +843,7 @@ function openGoogleSandboxModal(onSuccess) {
   });
   
   document.getElementById('btn-submit-sandbox-google').addEventListener('click', () => {
-    const email = document.getElementById('sandbox-google-email').value.trim() || 'gohilriteshs@gmail.com';
+    const email = document.getElementById('sandbox-google-email').value.trim() || 'support@jalaramcomputers.com';
     const name = document.getElementById('sandbox-google-name').value.trim() || 'Ritesh Gohil';
     
     const fallbackUser = {
@@ -2569,7 +2571,7 @@ async function sendGmail(subject, bodyHtml, to = null, cc = null) {
 
   const toEmail = to || "jalaramcomputers21@gmail.com";
   const defaultCc = currentUser ? currentUser.email : "me";
-  const ccEmail = cc !== null ? cc : `${defaultCc}, gohilriteshs@gmail.com, jalaramcomputers21@gmail.com`;
+  const ccEmail = cc !== null ? cc : `${defaultCc}, support@jalaramcomputers.com, jalaramcomputers21@gmail.com`;
 
   const emailLines = [
     `To: ${toEmail}`
@@ -2664,6 +2666,38 @@ document.addEventListener('DOMContentLoaded', function() {
     if (num <= 0) return 0;
     if (num < 5000) return Math.round(num / 500) * 500;
     return Math.round(num / 1000) * 1000;
+  }
+
+  function isUsableProductVideoUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    const value = url.trim();
+    if (!value) return false;
+    if (value.startsWith('data:video/')) return true;
+    if (value.startsWith('http://') || value.startsWith('https://')) return true;
+    return false;
+  }
+
+  function normalizeProductMedia(product) {
+    if (!product) return product;
+    if (!product.images || !Array.isArray(product.images) || product.images.length < 4) {
+      product.images = [
+        product.imageUrl || "https://images.unsplash.com/photo-1546435770-a3e426bf472b",
+        product.imageUrl2 || product.imageUrl || "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
+        product.imageUrl3 || product.imageUrl || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+        product.imageUrl4 || product.imageUrl || "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46"
+      ];
+    }
+    product.imageUrl2 = product.images[1];
+    product.imageUrl3 = product.images[2];
+    product.imageUrl4 = product.images[3];
+    if (product.videoUrl !== undefined) {
+      product.videoUrl = isUsableProductVideoUrl(product.videoUrl) ? product.videoUrl.trim() : '';
+    }
+    return product;
+  }
+
+  function normalizeProductsCatalog(list) {
+    return (Array.isArray(list) ? list : []).map((p) => normalizeProductMedia({ ...p }));
   }
 
   function normalizeCatalogPrices(catalog) {
@@ -4876,7 +4910,7 @@ document.addEventListener('DOMContentLoaded', function() {
           `;
 
           // Send to BOTH Customer (To) and Sellers (Cc)
-          const sellerEmails = "jalaramcomputers21@gmail.com, gohilriteshs@gmail.com";
+          const sellerEmails = "jalaramcomputers21@gmail.com, support@jalaramcomputers.com";
           const emailSuccess = await sendGmail(`[Jalaram Computers] Order Invoice Activation - ${orderDetails.orderId}`, checkoutBody, orderDetails.customer.email, sellerEmails);
           if (emailSuccess) {
             showToast("✓ Order invoice email sent successfully via Gmail!");
@@ -4929,7 +4963,7 @@ document.addEventListener('DOMContentLoaded', function() {
         customer: {
           firstName: currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : "Ritesh",
           lastName: "Gohil",
-          email: currentUser ? currentUser.email : "gohilriteshs@gmail.com",
+          email: currentUser ? currentUser.email : "support@jalaramcomputers.com",
           phone: "+91 98928 48643"
         },
         shippingDetails: {
@@ -5144,8 +5178,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- 6B. RENDER DYNAMIC PRODUCT PAGE ---
   function renderDynamicProductPage() {
-    const selectedProd = JSON.parse(localStorage.getItem('selected_product'));
+    let selectedProd = JSON.parse(localStorage.getItem('selected_product'));
     if (!selectedProd) return;
+    selectedProd = normalizeProductMedia({ ...selectedProd });
+    localStorage.setItem('selected_product', JSON.stringify(selectedProd));
 
     // 1. Title
     document.title = `${selectedProd.name} — Jalaram Computers`;
@@ -5256,7 +5292,7 @@ document.addEventListener('DOMContentLoaded', function() {
             activeImages.push(selectedProd.imageUrl || "https://images.unsplash.com/photo-1546435770-a3e426bf472b");
           }
 
-          const hasVideo = !!selectedProd.videoUrl;
+          const hasVideo = isUsableProductVideoUrl(selectedProd.videoUrl);
 
           if (activeImages.length > 0) {
             let thumbsHtml = '';
@@ -5553,7 +5589,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
               <div>
                 <label class="block text-primary text-[10px] tracking-[0.1em] uppercase font-semibold mb-1" style="color: rgb(15 38 64); font-family: sans-serif;">Email Address *</label>
-                <input type="email" id="booking-email" required placeholder="gohilriteshs@gmail.com" class="w-full px-4 py-3 border border-silver-light focus:border-accent text-sm text-primary bg-alabaster outline-none transition-colors" style="background-color: #faf8f5; border-color: #e5e7eb;">
+                <input type="email" id="booking-email" required placeholder="support@jalaramcomputers.com" class="w-full px-4 py-3 border border-silver-light focus:border-accent text-sm text-primary bg-alabaster outline-none transition-colors" style="background-color: #faf8f5; border-color: #e5e7eb;">
               </div>
 
               <!-- Service & Schedule -->
@@ -6303,22 +6339,11 @@ document.addEventListener('DOMContentLoaded', function() {
         shopProducts = [];
       }
       // Dynamic startup migration checker for preexisting product entries
-      let migrated = false;
       normalizeCatalogPrices(shopProducts);
+      shopProducts = normalizeProductsCatalog(shopProducts);
+      let migrated = false;
       shopProducts.forEach(p => {
-        if (!p.images || !Array.isArray(p.images) || p.images.length < 4) {
-          p.images = [
-            p.imageUrl || "https://images.unsplash.com/photo-1546435770-a3e426bf472b",
-            p.imageUrl2 || p.imageUrl || "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
-            p.imageUrl3 || p.imageUrl || "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
-            p.imageUrl4 || p.imageUrl || "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46"
-          ];
-          p.imageUrl2 = p.images[1];
-          p.imageUrl3 = p.images[2];
-          p.imageUrl4 = p.images[3];
-          migrated = true;
-        }
-        if (!p.videoUrl) {
+        if (p.videoUrl === undefined) {
           p.videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
           migrated = true;
         }

@@ -4,7 +4,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == "gohilriteshs@gmail.com";
+        && request.auth.token.email == "support@jalaramcomputers.com";
     }
 
     function isValidOrder() {
@@ -53,7 +53,8 @@ service cloud.firestore {
     }
 
     match /services/{serviceId} {
-      allow read, write: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

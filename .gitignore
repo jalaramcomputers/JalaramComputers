@@ -6,9 +6,6 @@ node_modules/
 .env.local
 .env.*.local
 
-# Firebase local config (copy from example before deploy)
-public/firebase-applet-config.json
-
 # OS / editor
 .DS_Store
 Thumbs.db
