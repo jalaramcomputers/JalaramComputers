@@ -901,8 +901,23 @@ async function loginWithGoogle() {
     if (window.showToast) window.showToast(`Successfully linked Google account: ${currentUser.email}!`);
     return true;
   } catch (error) {
-    console.warn('Google link popup failed or was blocked inside the sandboxed preview iframe:', error);
-    
+    console.warn('Google sign-in popup failed:', error?.code, error?.message);
+
+    // Surface real configuration errors instead of silently showing the
+    // sandbox-bypass modal (which hides the actual cause on the live site).
+    const code = error?.code || '';
+    const configErrors = {
+      'auth/unauthorized-domain': 'This domain is not authorized for Google sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.',
+      'auth/operation-not-allowed': 'Google sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
+      'auth/configuration-not-found': 'Firebase Auth is not configured. Enable Authentication in the Firebase Console.',
+    };
+    if (configErrors[code]) {
+      if (window.showToast) window.showToast(configErrors[code]);
+      return false;
+    }
+
+    // Popup blocked / closed by the user, or running inside a sandboxed
+    // iframe → fall back to the manual sandbox-bypass modal.
     return new Promise((resolve) => {
       openGoogleSandboxModal((success) => {
         resolve(success);
