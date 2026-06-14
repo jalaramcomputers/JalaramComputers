@@ -20,7 +20,7 @@
       "imageMobile": "/assets/images/hero/networking_support_mobile.jpg",
       "cta": "Network Solutions",
       "link": "/services",
-      "align": "left",
+      "align": "right",
       "order": 1
     },
     {
@@ -31,7 +31,7 @@
       "imageMobile": "/assets/images/hero/printers_repair_mobile.jpg",
       "cta": "Printer Services",
       "link": "/services",
-      "align": "right",
+      "align": "left",
       "order": 2
     },
     {
@@ -42,7 +42,7 @@
       "imageMobile": "/assets/images/hero/computer_repair_mobile.jpg",
       "cta": "Repair My PC",
       "link": "/services",
-      "align": "left",
+      "align": "right",
       "order": 3
     },
     {
@@ -64,7 +64,7 @@
       "imageMobile": "/assets/images/hero/cctv_installation_mobile.jpg",
       "cta": "Secure Your Space",
       "link": "/services",
-      "align": "left",
+      "align": "right",
       "order": 5
     }
   ]
