@@ -1,0 +1,9 @@
+{
+  "title": "My Account — Jalaram Computers",
+  "bodyClass": "bg-alabaster text-charcoal font-sans min-h-screen flex flex-col jc-site",
+  "heroPreload": false,
+  "pageCss": [],
+  "pageStyles": null,
+  "whatsappFloat": true,
+  "hasPageScripts": false
+}

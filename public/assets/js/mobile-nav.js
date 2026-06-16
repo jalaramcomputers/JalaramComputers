@@ -97,34 +97,37 @@
     const activeKey = { '/': 'home', '/shop': 'shop', '/services': 'services', '/about': 'about', '/contact': 'contact', '/cart': 'cart' }[path];
 
     const linksHtml = NAV_LINKS.map((link) => {
-      const active = link.key === activeKey ? ' text-accent font-semibold' : '';
-      return `<a href="${link.href}" data-nav="${link.key}" class="py-3 text-silver hover:text-accent border-b border-white/5${active}">${link.label}</a>`;
+      const activeClass = link.key === activeKey ? ' jc-drawer-link--active' : '';
+      return `<a href="${link.href}" data-nav="${link.key}" class="jc-drawer-link${activeClass}">${link.label}</a>`;
     }).join('');
 
     const drawer = document.createElement('div');
     drawer.id = 'mobile-nav-drawer';
     drawer.className = 'fixed inset-0 z-[300] flex justify-end hidden-drawer';
     drawer.innerHTML = `
-      <div id="mobile-drawer-backdrop" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
-      <div id="mobile-nav-drawer-content" class="relative w-80 max-w-[85vw] h-full bg-primary-dark shadow-2xl border-l border-white/5 flex flex-col z-10 p-6 overflow-y-auto" style="background-color:#0f172a">
-        <div class="flex items-center justify-between mb-10 pb-6 border-b border-white/5">
-          <a href="/" class="flex items-center gap-2">
-            <img src="/assets/images/logo.png" alt="Jalaram Computers" class="h-10 w-auto">
+      <div id="mobile-drawer-backdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+      <div id="mobile-nav-drawer-content" class="jc-drawer relative w-80 max-w-[85vw] h-full shadow-2xl flex flex-col z-10 p-6 overflow-y-auto">
+        <div class="flex items-center justify-between mb-8 pb-5 border-b border-white/5">
+          <a href="/" class="flex items-center gap-3">
+            <img src="/assets/images/logo.png" alt="Jalaram Computers" class="h-9 w-auto">
+            <span style="font-family:'Playfair Display',serif;font-size:0.85rem;color:#fff;letter-spacing:0.04em;">Jalaram</span>
           </a>
-          <button type="button" id="mobile-drawer-close" class="text-silver hover:text-accent p-2" aria-label="Close menu">
-            <iconify-icon icon="lucide:x" class="text-2xl"></iconify-icon>
+          <button type="button" id="mobile-drawer-close" class="jc-navbar__icon-btn" aria-label="Close menu">
+            <iconify-icon icon="lucide:x" class="jc-navbar__icon"></iconify-icon>
           </button>
         </div>
-        <div class="mb-6">
-          <input type="search" id="mobile-nav-search" placeholder="Search products..." autocomplete="off">
+        <div class="mb-5">
+          <input type="search" id="mobile-nav-search" placeholder="Search products…" autocomplete="off" aria-label="Search products">
         </div>
-        <nav class="flex flex-col gap-2 text-sm uppercase tracking-[0.2em] font-medium" id="mobile-nav-list">
+        <nav class="flex flex-col" id="mobile-nav-list">
           ${linksHtml}
         </nav>
-        <a href="/services" class="mobile-drawer-cta bg-accent text-primary-deeper mt-6" style="display:flex;align-items:center;justify-content:center;min-height:44px;padding:0.75rem 1rem;font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;background:#d4af37;color:#091a2e;">Book a Service</a>
-        <a href="https://wa.me/919892848643" target="_blank" rel="noopener" class="mobile-drawer-cta border border-green-600/40 text-green-400 mt-3" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;min-height:44px;padding:0.75rem 1rem;font-size:0.75rem;text-decoration:none;">WhatsApp Us</a>
-        <div class="pt-8 mt-auto border-t border-white/5 text-[10px] tracking-widest text-silver/40 uppercase text-center">
-          Jalaram Computers &copy; ${new Date().getFullYear()}
+        <a href="/book-service" class="jc-drawer-cta jc-drawer-cta--gold">Book a Service</a>
+        <a href="https://wa.me/919892848643" target="_blank" rel="noopener" class="jc-drawer-cta jc-drawer-cta--whatsapp">
+          <iconify-icon icon="mdi:whatsapp"></iconify-icon> WhatsApp Us
+        </a>
+        <div class="pt-8 mt-auto text-[10px] tracking-[0.2em] text-silver/35 uppercase text-center font-medium">
+          Est. Mumbai &middot; ${new Date().getFullYear()}
         </div>
       </div>
     `;

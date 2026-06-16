@@ -1,0 +1,9 @@
+{
+  "title": "Contact — Jalaram Computers",
+  "bodyClass": "bg-alabaster text-charcoal font-sans jc-site",
+  "heroPreload": false,
+  "pageCss": [],
+  "pageStyles": "* { margin: 0; padding: 0; box-sizing: border-box; }\r\n    .portal-input { border: 1px solid #e2e8f0; border-radius: 0; }\r\n    .portal-input:focus { border-color: #1A3A5C; outline: none; }",
+  "whatsappFloat": true,
+  "hasPageScripts": false
+}

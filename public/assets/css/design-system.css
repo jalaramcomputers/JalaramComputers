@@ -1,0 +1,515 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Jalaram Computers — Design System v2
+   Unified tokens, typography, navigation, and component styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Brand */
+  --jc-primary: #1A3A5C;
+  --jc-primary-dark: #0F2640;
+  --jc-primary-deeper: #091A2E;
+  --jc-accent: #D4AF37;
+  --jc-accent-hover: #c4a030;
+  --jc-silver: #C0C0C0;
+  --jc-silver-light: #E8E8E8;
+  --jc-alabaster: #F5F4F2;
+  --jc-charcoal: #1A1A1A;
+  --jc-muted: #64748b;
+  --jc-border: rgba(192, 192, 192, 0.15);
+
+  /* Layout */
+  --jc-header-h: 4.5rem;
+  --jc-container: 80rem;
+  --jc-radius-sm: 8px;
+  --jc-radius: 12px;
+  --jc-radius-lg: 16px;
+  --jc-radius-xl: 20px;
+  --jc-radius-full: 9999px;
+
+  /* Shadows */
+  --jc-shadow-sm: 0 1px 3px rgba(9, 26, 46, 0.06);
+  --jc-shadow-md: 0 4px 20px rgba(9, 26, 46, 0.08);
+  --jc-shadow-lg: 0 12px 40px rgba(9, 26, 46, 0.12);
+  --jc-shadow-header: 0 4px 24px rgba(0, 0, 0, 0.18);
+
+  /* Typography */
+  --jc-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --jc-font-display: 'Playfair Display', Georgia, serif;
+  --jc-text-xs: 0.75rem;
+  --jc-text-sm: 0.875rem;
+  --jc-text-base: 1rem;
+  --jc-text-lg: 1.125rem;
+  --jc-text-xl: 1.25rem;
+  --jc-text-2xl: 1.5rem;
+  --jc-text-3xl: 1.875rem;
+  --jc-text-4xl: 2.25rem;
+  --jc-text-5xl: 3rem;
+
+  /* Motion */
+  --jc-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --jc-duration: 0.25s;
+}
+
+/* ── Base ── */
+.jc-site {
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-base);
+  line-height: 1.6;
+  color: var(--jc-charcoal);
+  background-color: var(--jc-alabaster);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Restore intentional radii on key components */
+.jc-site .product-card,
+.jc-site .jc-social-link,
+.jc-site .jc-whatsapp-float,
+.jc-site .product-card,
+.jc-site .category-card,
+.jc-site .glass-card,
+.jc-site .glass-card-light,
+.jc-site .service-card,
+.jc-site input:not([type="checkbox"]):not([type="radio"]),
+.jc-site select,
+.jc-site textarea,
+.jc-site .portal-input,
+.jc-site #mobile-nav-drawer-content,
+.jc-site #mobile-nav-search,
+.jc-site .mobile-drawer-cta,
+.jc-site .hero-dot,
+.jc-site .jc-page-hero-inner {
+  border-radius: var(--jc-radius) !important;
+}
+
+.jc-site .jc-cart-badge,
+.jc-site .jc-whatsapp-float {
+  border-radius: var(--jc-radius-full) !important;
+}
+
+/* Override shop's border-radius: 0 reset */
+.jc-site[style*="border-radius"],
+.jc-site * {
+  /* shop.html inline style reset — neutralized above */
+}
+
+/* ── Typography ── */
+.jc-site h1,
+.jc-site h2,
+.jc-site h3,
+.jc-site h4 {
+  font-family: var(--jc-font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--jc-primary);
+}
+
+.jc-site h1,
+.jc-site .jc-page-title {
+  font-size: clamp(2rem, 4vw, var(--jc-text-5xl));
+}
+
+.jc-site h2,
+.jc-site .jc-section-title {
+  font-size: clamp(1.5rem, 3vw, var(--jc-text-3xl));
+}
+
+.jc-site h3 {
+  font-size: clamp(1.25rem, 2.5vw, var(--jc-text-2xl));
+}
+
+.jc-site h4,
+.jc-site .jc-footer-heading {
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.jc-site .jc-eyebrow,
+.jc-site [class*="tracking-[0.3em]"].text-accent,
+.jc-site main > .bg-primary-dark .text-accent.text-xs {
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--jc-accent) !important;
+}
+
+.jc-site p {
+  line-height: 1.65;
+}
+
+.jc-site .font-serif {
+  font-family: var(--jc-font-display);
+}
+
+.jc-site .font-sans {
+  font-family: var(--jc-font-sans);
+}
+
+/* Hero on homepage keeps sans for impact */
+.jc-landing #hero-title {
+  font-family: var(--jc-font-sans) !important;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* Header/nav styles → navbar.css */
+
+/* Search on inner pages */
+.jc-site main > .bg-primary-dark:first-child,
+.jc-site .jc-page-hero {
+  background: linear-gradient(135deg, var(--jc-primary-deeper) 0%, var(--jc-primary-dark) 50%, var(--jc-primary) 100%) !important;
+  padding-top: 3rem !important;
+  padding-bottom: 3rem !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.jc-site main > .bg-primary-dark:first-child::before,
+.jc-site .jc-page-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 100% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.jc-site main > .bg-primary-dark:first-child .max-w-7xl,
+.jc-site .jc-page-hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.jc-site main > .bg-primary-dark:first-child h1,
+.jc-site .jc-page-hero h1 {
+  font-family: var(--jc-font-display);
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.jc-site main > .bg-primary-dark:first-child p,
+.jc-site .jc-page-hero p {
+  color: rgba(192, 192, 192, 0.85) !important;
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-base);
+  line-height: 1.6;
+  max-width: 36rem;
+}
+
+/* Breadcrumbs */
+.jc-site main > .bg-primary-dark:first-child nav.flex,
+.jc-site .jc-breadcrumb {
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(192, 192, 192, 0.5);
+  margin-bottom: 1rem;
+}
+
+.jc-site main > .bg-primary-dark:first-child nav.flex a:hover {
+  color: var(--jc-accent);
+}
+
+/* ── Buttons ── */
+.jc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--jc-duration) var(--jc-ease);
+}
+
+.jc-btn-accent,
+.jc-site .btn-gold-slide.bg-accent,
+.jc-site a.bg-accent.text-primary-deeper,
+.jc-site button.bg-accent {
+  background: var(--jc-accent) !important;
+  color: var(--jc-primary-deeper) !important;
+}
+
+.jc-btn-accent:hover,
+.jc-site .btn-gold-slide.bg-accent:hover {
+  background: var(--jc-accent-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+}
+
+.jc-btn-whatsapp {
+  background: #16a34a;
+  color: #fff;
+}
+
+.jc-btn-whatsapp:hover {
+  background: #15803d;
+}
+
+/* ── Cards & sections ── */
+.jc-site section {
+  scroll-margin-top: calc(var(--jc-header-h) + 1rem);
+}
+
+.jc-site .product-card,
+.jc-site .category-card,
+.jc-site .service-card {
+  border-radius: var(--jc-radius-lg) !important;
+  box-shadow: var(--jc-shadow-sm);
+  transition: transform var(--jc-duration) var(--jc-ease),
+              box-shadow var(--jc-duration) var(--jc-ease),
+              border-color var(--jc-duration) var(--jc-ease);
+}
+
+.jc-site .product-card:hover,
+.jc-site .category-card:hover,
+.jc-site .service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--jc-shadow-lg);
+}
+
+/* Section headers with accent line */
+.jc-landing section:not(#services-hero) [class*="tracking-[0.3em]"].text-accent::before,
+.jc-site .jc-section-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  height: 2px;
+  background: var(--jc-accent);
+  margin-right: 0.625rem;
+  vertical-align: middle;
+}
+
+/* ── Forms ── */
+.jc-site input:not([type="checkbox"]):not([type="radio"]),
+.jc-site select,
+.jc-site textarea,
+.jc-site .portal-input {
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-sm);
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  transition: border-color var(--jc-duration) var(--jc-ease),
+              box-shadow var(--jc-duration) var(--jc-ease);
+}
+
+.jc-site input:focus,
+.jc-site select:focus,
+.jc-site textarea:focus,
+.jc-site .portal-input:focus {
+  border-color: var(--jc-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.12);
+}
+
+/* ── Footer ── */
+.jc-footer {
+  padding-top: 4rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid rgba(192, 192, 192, 0.08);
+}
+
+.jc-footer-heading {
+  color: #fff;
+  margin-bottom: 1.25rem;
+}
+
+.jc-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.jc-footer-links a {
+  font-size: var(--jc-text-sm);
+  color: rgba(192, 192, 192, 0.55);
+  text-decoration: none;
+  transition: color var(--jc-duration) var(--jc-ease);
+}
+
+.jc-footer-links a:hover {
+  color: var(--jc-accent);
+}
+
+.jc-social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgba(192, 192, 192, 0.15);
+  color: rgba(192, 192, 192, 0.5);
+  text-decoration: none;
+  transition: all var(--jc-duration) var(--jc-ease);
+}
+
+.jc-social-link:hover {
+  color: var(--jc-accent);
+  border-color: var(--jc-accent);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.jc-footer-grid {
+  border-bottom: 1px solid rgba(192, 192, 192, 0.08);
+}
+
+/* ── WhatsApp float ── */
+.jc-whatsapp-float,
+#whatsapp-float-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 50;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #16a34a !important;
+  color: #fff;
+  border-radius: var(--jc-radius-full) !important;
+  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.4);
+  transition: transform var(--jc-duration) var(--jc-ease),
+              box-shadow var(--jc-duration) var(--jc-ease);
+  text-decoration: none;
+}
+
+.jc-whatsapp-float:hover,
+#whatsapp-float-btn:hover {
+  background: #15803d !important;
+  transform: scale(1.08);
+  box-shadow: 0 8px 28px rgba(22, 163, 74, 0.5);
+}
+
+/* ── Mobile drawer (enhanced) ── */
+#mobile-nav-drawer-content {
+  background: var(--jc-primary-dark) !important;
+  border-left: 1px solid var(--jc-border) !important;
+}
+
+#mobile-nav-search {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--jc-border);
+  color: #fff;
+  font-family: var(--jc-font-sans);
+  font-size: var(--jc-text-sm);
+}
+
+#mobile-nav-search::placeholder {
+  color: rgba(192, 192, 192, 0.5);
+}
+
+#mobile-nav-list a.jc-drawer-link,
+#mobile-nav-list a {
+  display: block;
+  padding: 0.75rem 0.5rem;
+  font-family: var(--jc-font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--jc-silver);
+  text-decoration: none;
+  position: relative;
+  transition: color 0.5s ease;
+}
+
+#mobile-nav-list a.jc-drawer-link::after {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 0.25rem;
+  height: 1px;
+  background: var(--jc-accent);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+
+#mobile-nav-list a.jc-drawer-link:hover {
+  color: var(--jc-accent);
+}
+
+#mobile-nav-list a.jc-drawer-link:not(.jc-drawer-link--active):hover::after {
+  transform: scaleX(1);
+}
+
+#mobile-nav-list a.jc-drawer-link--active {
+  color: #fff !important;
+  border-bottom: 1px solid var(--jc-accent);
+  padding-bottom: 0.75rem;
+}
+
+#mobile-nav-list a.jc-drawer-link--active::after {
+  display: none;
+}
+
+.mobile-drawer-cta {
+  border-radius: var(--jc-radius) !important;
+  font-family: var(--jc-font-sans);
+  font-weight: 600;
+}
+
+/* ── Utility overrides ── */
+.jc-site .text-warm-gray {
+  color: var(--jc-muted);
+}
+
+/* Hide legacy clutter */
+#footer-blog, #footer-faq,
+a[href$="#blog"], a[href$="#faq"] {
+  display: none !important;
+}
+
+/* Smooth scroll offset for sticky header */
+html {
+  scroll-padding-top: var(--jc-header-h);
+}
+
+@media (min-width: 1024px) {
+  .jc-nav {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .jc-header {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  .jc-header .h-20 {
+    height: 3.75rem !important;
+  }
+
+  .jc-logo img {
+    height: 2.25rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jc-site *,
+  .jc-site *::before,
+  .jc-site *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -12,6 +12,6 @@
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["server.ts"],
+  "include": ["server.ts", "lib/**/*.ts"],
   "exclude": ["node_modules", "public", "dist"]
 }

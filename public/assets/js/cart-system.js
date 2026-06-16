@@ -2512,10 +2512,14 @@ function setupHeaderCustomerPortal() {
 }
 
 function applyHeaderNavStyles() {
-  const navClass = 'text-sm tracking-widest uppercase font-medium hover:text-accent transition-colors duration-500';
   ['nav-home-link', 'nav-shop-link', 'nav-services-link', 'nav-about-link', 'nav-contact-link'].forEach((id) => {
     document.querySelectorAll(`header #${id}`).forEach((el) => {
-      navClass.split(' ').forEach((cls) => el.classList.add(cls));
+      if (!el.classList.contains('jc-nav-link')) el.classList.add('jc-nav-link');
+      el.classList.remove(
+        'text-sm', 'tracking-widest', 'uppercase', 'font-medium', 'hover:text-accent',
+        'transition-colors', 'duration-500', 'text-white', 'text-silver',
+        'border-b', 'border-accent', 'pb-1',
+      );
     });
   });
 }
@@ -2524,20 +2528,17 @@ function highlightActiveNav() {
   const path = window.location.pathname;
   const navLinks = [
     { id: 'nav-home-link', match: path === '/' },
-    { id: 'nav-shop-link', match: path === '/shop' },
-    { id: 'nav-services-link', match: path === '/services' },
+    { id: 'nav-shop-link', match: path === '/shop' || path === '/product' },
+    { id: 'nav-services-link', match: path === '/services' || path === '/book-service' },
     { id: 'nav-about-link', match: path === '/about' },
     { id: 'nav-contact-link', match: path === '/contact' },
     { id: 'nav-cart-link', match: path === '/cart' },
   ];
   navLinks.forEach(({ id, match }) => {
     document.querySelectorAll(`header #${id}`).forEach((el) => {
-      if (match) {
-        el.classList.add('text-white', 'border-b', 'border-accent', 'pb-1');
-        el.classList.remove('text-silver');
-      } else {
-        el.classList.add('text-silver');
-        el.classList.remove('text-white', 'border-b', 'border-accent', 'pb-1');
+      if (id.startsWith('nav-') && id !== 'nav-cart-link') {
+        el.classList.toggle('jc-nav-link--active', match);
+        el.classList.remove('text-white', 'border-b', 'border-accent', 'pb-1', 'text-silver');
       }
     });
   });

@@ -10,18 +10,7 @@
       "**/node_modules/**"
     ],
     "rewrites": [
-      { "source": "/", "destination": "/index.html" },
-      { "source": "/shop", "destination": "/shop.html" },
-      { "source": "/product", "destination": "/product.html" },
-      { "source": "/cart", "destination": "/cart.html" },
-      { "source": "/checkout", "destination": "/checkout.html" },
-      { "source": "/order-confirmed", "destination": "/order-confirmed.html" },
-      { "source": "/services", "destination": "/services.html" },
-      { "source": "/about", "destination": "/about.html" },
-      { "source": "/contact", "destination": "/contact.html" },
-      { "source": "/account", "destination": "/account.html" },
-      { "source": "/admin", "destination": "/admin.html" },
-      { "source": "/book-service", "destination": "/book-service.html" }
+      { "source": "/admin", "destination": "/admin.html" }
     ],
     "headers": [
       {

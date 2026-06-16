@@ -1,44 +1,5 @@
 /* Landing page polish — post-hero sections only; hero (#services-hero) untouched */
-
-/* ── Header (not hero) ── */
-.jc-landing header {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(15, 38, 64, 0.97) !important;
-  box-shadow: 0 1px 0 rgba(192, 192, 192, 0.08);
-}
-
-.jc-landing header .search-input:focus {
-  outline: none;
-}
-
-.jc-landing header nav a {
-  position: relative;
-}
-
-.jc-landing header nav a:not(.border-b)::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0;
-  height: 1px;
-  background: var(--jc-accent, #D4AF37);
-  transition: width 0.3s ease;
-}
-
-.jc-landing header nav a:not(.border-b):hover::after {
-  width: 100%;
-}
-
-.jc-landing #header-profile-btn {
-  min-width: 2.5rem;
-  min-height: 2.5rem;
-}
-
-.jc-landing #header-profile-btn:hover {
-  color: var(--jc-accent, #D4AF37);
-}
+/* Header/nav → navbar.css (shared on all pages) */
 
 .jc-landing {
   --jc-primary: #1A3A5C;
