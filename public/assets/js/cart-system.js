@@ -95,7 +95,7 @@ function getShopDetails() {
 }
 
 const DEFAULT_HERO_SLIDES = {
-  autoPlayMs: 4500,
+  autoPlayMs: 6000,
   slides: [
     { id: 'instant_support', title: 'Instant Support', subtitle: 'Remote & on-site IT help — same-day response for urgent issues', image: '/assets/images/hero/instant_support.jpg', imageMobile: '/assets/images/hero/instant_support_mobile.jpg', cta: 'Get Support', link: '/services', align: 'left', order: 0 },
     { id: 'networking_support', title: 'Networking Support', subtitle: 'Enterprise LAN, fiber links & structured cabling for offices', image: '/assets/images/hero/networking_support.jpg', imageMobile: '/assets/images/hero/networking_support_mobile.jpg', cta: 'Network Solutions', link: '/services', align: 'right', order: 1 },
@@ -267,14 +267,19 @@ function getHeroImageUrl(slide) {
 const heroCarouselState = {
   activeIndex: 0,
   slides: [],
-  autoPlayMs: 4500,
+  autoPlayMs: 6000,
   touchStartX: 0,
   touchStartY: 0,
 };
 
-function getHeroCarouselLayers() {
-  const bgLayers = document.getElementById('hero-bg-layers');
-  return bgLayers ? [...bgLayers.querySelectorAll('.hero-bg-layer')] : [];
+const HERO_CROSSFADE_MS = 2000;
+
+function replayHeroLineAnimation(el, delayClass) {
+  if (!el) return;
+  el.classList.remove('hero-line', 'hero-line--delay-1', 'hero-line--delay-2', 'hero-line--delay-3', 'hero-text-swap-left', 'hero-text-swap-right');
+  void el.offsetWidth;
+  if (delayClass) el.classList.add(delayClass);
+  el.classList.add('hero-line');
 }
 
 function updateHeroLayoutFromState(index) {
@@ -282,7 +287,6 @@ function updateHeroLayoutFromState(index) {
   if (!slide) return;
 
   const align = getSlideAlign(slide);
-  const animClass = align === 'right' ? 'hero-text-swap-right' : 'hero-text-swap-left';
   const title = slide.title || formatServiceTitleFromId(slide.id);
   const headingPanel = document.getElementById('hero-heading-panel');
   const contentWrap = document.getElementById('hero-content-wrap');
@@ -291,6 +295,7 @@ function updateHeroLayoutFromState(index) {
   const subtitleEl = document.getElementById('hero-subtitle');
   const ctaEl = document.getElementById('hero-cta');
   const dotsWrap = document.getElementById('hero-dots');
+  const hero = document.getElementById('services-hero');
 
   if (headingPanel) {
     headingPanel.classList.remove('hero-align-left', 'hero-align-right');
@@ -305,24 +310,30 @@ function updateHeroLayoutFromState(index) {
     bgOverlay.classList.add(align === 'right' ? 'hero-overlay-right' : 'hero-overlay-left');
   }
   if (titleEl) {
-    titleEl.classList.remove('hero-text-swap-left', 'hero-text-swap-right');
-    void titleEl.offsetWidth;
     titleEl.textContent = title;
-    titleEl.classList.add(animClass);
+    replayHeroLineAnimation(titleEl, null);
   }
   if (subtitleEl) {
-    subtitleEl.classList.remove('hero-text-swap-left', 'hero-text-swap-right');
-    void subtitleEl.offsetWidth;
     subtitleEl.textContent = slide.subtitle || '';
-    subtitleEl.classList.add(animClass);
+    replayHeroLineAnimation(subtitleEl, 'hero-line--delay-1');
   }
   if (ctaEl) {
     ctaEl.href = slide.link || '/services';
-    ctaEl.textContent = slide.cta || 'Explore Services';
+    ctaEl.innerHTML = `${slide.cta || 'Explore Services'} <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block"><path d="M5 12h14m-7-7l7 7l-7 7"/></svg>`;
+    replayHeroLineAnimation(ctaEl, 'hero-line--delay-2');
+  }
+  if (hero) {
+    hero.style.setProperty('--hero-dot-ms', `${heroCarouselState.autoPlayMs}ms`);
   }
   dotsWrap?.querySelectorAll('.hero-dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i === index);
-    dot.setAttribute('aria-selected', i === index ? 'true' : 'false');
+    const isActive = i === index;
+    dot.classList.toggle('active', isActive);
+    dot.classList.toggle('hero-dot--active', isActive);
+    dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    if (isActive && dot.parentNode) {
+      const fresh = dot.cloneNode(true);
+      dot.parentNode.replaceChild(fresh, dot);
+    }
   });
 }
 
@@ -341,6 +352,11 @@ function heroPreloadAdjacentSlides(index) {
   preloadHeroImage(getHeroImageUrl(slides[(index - 1 + slides.length) % slides.length]));
 }
 
+function getHeroCarouselLayers() {
+  const bgLayers = document.getElementById('hero-bg-layers');
+  return bgLayers ? [...bgLayers.querySelectorAll('.hero-bg-layer')] : [];
+}
+
 function heroSetActiveSlide(index) {
   const slides = heroCarouselState.slides;
   if (!slides.length) return;
@@ -352,12 +368,20 @@ function heroSetActiveSlide(index) {
   layers.forEach((layer, i) => {
     const isActive = i === activeIndex;
     heroApplyLayerBackground(layer, slides[i]);
-    layer.classList.toggle('active', isActive);
-    layer.style.zIndex = isActive ? '2' : '1';
     if (isActive) {
-      layer.style.animation = 'none';
-      void layer.offsetWidth;
-      layer.style.animation = '';
+      layer.classList.remove('is-exiting');
+      if (!layer.classList.contains('active')) {
+        layer.classList.add('active');
+        layer.style.animation = 'none';
+        void layer.offsetWidth;
+        layer.style.removeProperty('animation');
+      }
+    } else if (layer.classList.contains('active')) {
+      layer.classList.remove('active');
+      layer.classList.add('is-exiting');
+      window.setTimeout(() => layer.classList.remove('is-exiting'), HERO_CROSSFADE_MS + 80);
+    } else {
+      layer.classList.remove('active', 'is-exiting');
     }
   });
 
@@ -421,7 +445,7 @@ function initServicesHero() {
   const existingLayers = bgLayers.querySelectorAll('.hero-bg-layer').length;
   if (hero.dataset.initialized === 'true' && existingLayers === slides.length) {
     heroCarouselState.slides = slides;
-    heroCarouselState.autoPlayMs = config.autoPlayMs || 4500;
+    heroCarouselState.autoPlayMs = config.autoPlayMs || 6000;
     heroRestartAutoplay = heroStartAutoPlay;
     heroRestartAutoplay?.();
     return;
@@ -429,7 +453,7 @@ function initServicesHero() {
   if (hero.dataset.initialized === 'true') resetServicesHero();
 
   heroCarouselState.slides = slides;
-  heroCarouselState.autoPlayMs = config.autoPlayMs || 4500;
+  heroCarouselState.autoPlayMs = config.autoPlayMs || 6000;
   heroCarouselState.activeIndex = 0;
 
   slides.forEach((slide) => preloadHeroImage(getHeroImageUrl(slide)));
@@ -450,7 +474,7 @@ function initServicesHero() {
   if (!controls) {
     controls = document.createElement('div');
     controls.id = 'hero-controls';
-    controls.className = 'hero-controls';
+    controls.className = 'hero-controls jc-home-hero__controls';
     controls.innerHTML = `
       <div id="hero-dots" class="hero-dots" role="tablist" aria-label="Hero slides"></div>
       <div class="hero-nav-btns">
@@ -2512,14 +2536,10 @@ function setupHeaderCustomerPortal() {
 }
 
 function applyHeaderNavStyles() {
+  const navClass = 'text-sm tracking-widest uppercase font-medium hover:text-accent transition-colors duration-500';
   ['nav-home-link', 'nav-shop-link', 'nav-services-link', 'nav-about-link', 'nav-contact-link'].forEach((id) => {
     document.querySelectorAll(`header #${id}`).forEach((el) => {
-      if (!el.classList.contains('jc-nav-link')) el.classList.add('jc-nav-link');
-      el.classList.remove(
-        'text-sm', 'tracking-widest', 'uppercase', 'font-medium', 'hover:text-accent',
-        'transition-colors', 'duration-500', 'text-white', 'text-silver',
-        'border-b', 'border-accent', 'pb-1',
-      );
+      navClass.split(' ').forEach((cls) => el.classList.add(cls));
     });
   });
 }
@@ -2528,17 +2548,20 @@ function highlightActiveNav() {
   const path = window.location.pathname;
   const navLinks = [
     { id: 'nav-home-link', match: path === '/' },
-    { id: 'nav-shop-link', match: path === '/shop' || path === '/product' },
-    { id: 'nav-services-link', match: path === '/services' || path === '/book-service' },
+    { id: 'nav-shop-link', match: path === '/shop' },
+    { id: 'nav-services-link', match: path === '/services' },
     { id: 'nav-about-link', match: path === '/about' },
     { id: 'nav-contact-link', match: path === '/contact' },
     { id: 'nav-cart-link', match: path === '/cart' },
   ];
   navLinks.forEach(({ id, match }) => {
     document.querySelectorAll(`header #${id}`).forEach((el) => {
-      if (id.startsWith('nav-') && id !== 'nav-cart-link') {
-        el.classList.toggle('jc-nav-link--active', match);
-        el.classList.remove('text-white', 'border-b', 'border-accent', 'pb-1', 'text-silver');
+      if (match) {
+        el.classList.add('text-white', 'border-b', 'border-accent', 'pb-1');
+        el.classList.remove('text-silver');
+      } else {
+        el.classList.add('text-silver');
+        el.classList.remove('text-white', 'border-b', 'border-accent', 'pb-1');
       }
     });
   });
@@ -3403,36 +3426,62 @@ document.addEventListener('DOMContentLoaded', function() {
   window.__jcSetupHeaderSearch = setupHeaderSearch;
 
   function setupNewsletterForm() {
-    document.querySelectorAll('input[type="email"][placeholder*="Enter your email"]').forEach((input) => {
-      if (input.dataset.jcNewsWired) return;
-      const wrap = input.parentElement;
-      const btn = wrap ? wrap.querySelector('button') : null;
-      if (!btn) return;
-      input.dataset.jcNewsWired = 'true';
+    const form = document.getElementById('newsletter-form');
+    const input = document.getElementById('newsletter-email');
+    const btn = document.getElementById('newsletter-submit');
+    const statusEl = document.getElementById('newsletter-status');
+    if (!form || !input || !btn || form.dataset.jcNewsWired) return;
+    form.dataset.jcNewsWired = 'true';
 
-      const subscribe = () => {
-        const email = input.value.trim();
-        const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
-        if (!valid) {
-          showToast('Please enter a valid email address.');
-          input.focus();
-          return;
+    const setStatus = (message, isError = false) => {
+      if (statusEl) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle('jc-home-newsletter__status--error', isError);
+      } else if (message && typeof showToast === 'function') {
+        showToast(message);
+      }
+    };
+
+    const subscribe = async () => {
+      const email = input.value.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+      if (!valid) {
+        setStatus('Please enter a valid email address.', true);
+        input.focus();
+        return;
+      }
+
+      btn.disabled = true;
+      const prevLabel = btn.textContent;
+      btn.textContent = 'Subscribing…';
+      setStatus('');
+
+      try {
+        const res = await fetch('/api/newsletter/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || 'Subscription failed. Please try again.');
         }
-        try {
-          const list = JSON.parse(localStorage.getItem('newsletter_subscribers')) || [];
-          if (!list.includes(email.toLowerCase())) {
-            list.push(email.toLowerCase());
-            localStorage.setItem('newsletter_subscribers', JSON.stringify(list));
-          }
-        } catch (e) {}
         input.value = '';
-        showToast('Subscribed! Exclusive deals will reach your inbox.');
-      };
+        setStatus(data.message || 'Welcome to the family! Check your inbox.');
+        if (typeof showToast === 'function') showToast(data.message || 'Subscribed!');
+      } catch (err) {
+        const msg = err?.message || 'Could not subscribe right now. Please try again.';
+        setStatus(msg, true);
+        if (typeof showToast === 'function') showToast(msg);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = prevLabel;
+      }
+    };
 
-      btn.addEventListener('click', (e) => { e.preventDefault(); subscribe(); });
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); subscribe(); }
-      });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      void subscribe();
     });
   }
 

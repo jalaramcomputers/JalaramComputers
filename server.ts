@@ -1,9 +1,11 @@
 import compression from 'compression';
+import 'dotenv/config';
 import express from 'express';
 import expressLayouts from 'express-ejs-layouts';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { handleNewsletterSubscribe } from './lib/newsletter-route.js';
 import { NAV_LINKS, navClass } from './lib/nav.js';
 import { getPageRenderOptions, PAGE_ROUTES } from './lib/pages.js';
 
@@ -136,6 +138,10 @@ app.get('/assets/images/hero/:file', (req, res) => {
   const pngAsJpg = file.endsWith('.jpg') ? HERO_IMAGE_FALLBACKS[file.replace('.jpg', '.png')] : null;
   if (pngAsJpg) return res.redirect(302, pngAsJpg);
   res.status(404).end();
+});
+
+app.post('/api/newsletter/subscribe', (req, res) => {
+  void handleNewsletterSubscribe(req, res);
 });
 
 for (const route of Object.keys(PAGE_ROUTES)) {

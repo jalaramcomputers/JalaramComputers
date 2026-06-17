@@ -22,11 +22,12 @@ export const ROUTE_NAV: Record<string, NavKey | null> = {
   '/account': null,
 };
 
-export const NAV_LINK = 'jc-nav-link';
-export const NAV_LINK_ACTIVE = 'jc-nav-link jc-nav-link--active';
+const NAV_BASE = 'text-sm tracking-widest uppercase font-medium transition-colors duration-500';
+export const NAV_INACTIVE = `text-silver hover:text-accent ${NAV_BASE}`;
+export const NAV_ACTIVE = `text-white border-b border-accent pb-1 ${NAV_BASE}`;
 
 export function navClass(activeNav: NavKey | null, key: NavKey): string {
-  return activeNav === key ? NAV_LINK_ACTIVE : NAV_LINK;
+  return activeNav === key ? NAV_ACTIVE : NAV_INACTIVE;
 }
 
 export function activeNavForRoute(route: string): NavKey | null {

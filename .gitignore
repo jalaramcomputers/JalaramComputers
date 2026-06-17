@@ -1,8 +1,7 @@
 # Dependencies
 node_modules/
 
-# Environment
-.env
+data/newsletter-subscribers.json
 .env.local
 .env.*.local
 

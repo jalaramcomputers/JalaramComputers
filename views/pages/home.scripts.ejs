@@ -1,181 +1,96 @@
 <script>
+/* Home page behaviour — counters, scroll-stack nav, newsletter.
+   The hero slideshow is driven by the shared cart-system.js engine
+   (it binds to #hero-bg-layers / #hero-title / .hero-dot etc.). */
 (function () {
-  var SLIDES = [
-    { title: 'Instant Support',     subtitle: 'Remote & on-site IT help \u2014 same-day response for urgent issues',          cta: 'Get Support',      link: '/services', align: 'left'  },
-    { title: 'Networking Support',  subtitle: 'Enterprise LAN, fiber links & structured cabling for offices',                  cta: 'Network Solutions', link: '/services', align: 'left'  },
-    { title: 'Printers Repair',     subtitle: 'Printer sales, toner supply & on-site repair for businesses',                  cta: 'Printer Services', link: '/services', align: 'right' },
-    { title: 'Computer Repair',     subtitle: 'Desktop diagnostics, upgrades & preventive maintenance',                       cta: 'Repair My PC',     link: '/services', align: 'left'  },
-    { title: 'Laptop Repair',       subtitle: 'Screen, motherboard, RAM & SSD upgrades for all brands',                      cta: 'Fix My Laptop',    link: '/services', align: 'left'  },
-    { title: 'CCTV Installation',   subtitle: 'HD cameras, DVR/NVR setup & remote monitoring for homes and offices',          cta: 'Secure Your Space',link: '/services', align: 'left'  }
-  ];
-  var AUTO_MS = 4500;
-  var current = 0;
-  var timer = null;
+  'use strict';
 
-  var bgLayersContainer = document.getElementById('hero-bg-layers');
-  var overlay     = document.getElementById('hero-bg-overlay');
-  var contentWrap = document.getElementById('hero-content-wrap');
-  var headingPanel= document.getElementById('hero-heading-panel');
-  var titleEl     = document.getElementById('hero-title');
-  var subtitleEl  = document.getElementById('hero-subtitle');
-  var ctaEl       = document.getElementById('hero-cta');
-  var dots        = Array.from(document.querySelectorAll('.hero-dot'));
-
-  if (!bgLayersContainer || !titleEl || !dots.length) return;
-
-  function getLayers() {
-    return Array.from(bgLayersContainer.querySelectorAll('.hero-bg-layer'));
-  }
-
-  function updateDots(idx) {
-    dots.forEach(function (d, i) {
-      if (i === idx) {
-        d.style.width = '24px';
-        d.style.background = '#D4AF37';
-      } else {
-        d.style.width = '8px';
-        d.style.background = 'rgba(255,255,255,0.35)';
-      }
-    });
-  }
-
-  function setCta(slide) {
-    if (!ctaEl) return;
-    ctaEl.href = slide.link;
-    ctaEl.innerHTML = slide.cta + ' <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block"><path d="M5 12h14m-7-7l7 7l-7 7"/></svg>';
-  }
-
-  function goTo(idx) {
-    var next = ((idx % SLIDES.length) + SLIDES.length) % SLIDES.length;
-    current = next;
-    var slide = SLIDES[current];
-    var layers = getLayers();
-
-    layers.forEach(function (layer, i) {
-      if (i === current) {
-        /* Clone to restart Ken Burns CSS animation */
-        var clone = layer.cloneNode(true);
-        bgLayersContainer.replaceChild(clone, layer);
-        clone.classList.add('active');
-      } else {
-        layer.classList.remove('active');
-      }
-    });
-
-    var isRight = slide.align === 'right';
-
-    overlay.classList.remove('hero-overlay-left', 'hero-overlay-right');
-    overlay.classList.add(isRight ? 'hero-overlay-right' : 'hero-overlay-left');
-
-    contentWrap.classList.remove('hero-content-left', 'hero-content-right');
-    contentWrap.classList.add(isRight ? 'hero-content-right' : 'hero-content-left');
-
-    headingPanel.classList.remove('hero-align-left', 'hero-align-right');
-    headingPanel.classList.add(isRight ? 'hero-align-right' : 'hero-align-left');
-
-    /* Trigger text-swap animation */
-    headingPanel.classList.remove('hero-text-swap-left', 'hero-text-swap-right');
-    void headingPanel.offsetWidth;
-    headingPanel.classList.add(isRight ? 'hero-text-swap-right' : 'hero-text-swap-left');
-
-    titleEl.textContent    = slide.title;
-    subtitleEl.textContent = slide.subtitle;
-    setCta(slide);
-    updateDots(current);
-  }
-
-  function startAutoPlay() {
-    if (timer) clearInterval(timer);
-    timer = setInterval(function () { goTo(current + 1); }, AUTO_MS);
-  }
-
-  dots.forEach(function (dot, i) {
-    dot.addEventListener('click', function () {
-      goTo(i);
-      startAutoPlay();
-    });
-  });
-
-  /* Pause on hover */
-  var heroSection = document.getElementById('services-hero');
-  if (heroSection) {
-    heroSection.addEventListener('mouseenter', function () { if (timer) clearInterval(timer); });
-    heroSection.addEventListener('mouseleave', startAutoPlay);
-  }
-
-  /* Init */
-  updateDots(0);
-  setCta(SLIDES[0]);
-  startAutoPlay();
-})();
-</script>
-<script>
-  (function() {
-    // Standard numerical count-up script (Optimized)
-    function animateCount(el, start, end, suffix, decimals = 0, duration = 2000) {
-      if (el.getAttribute('data-animated') === 'true') return;
-      el.setAttribute('data-animated', 'true');
-      
-      let startTime = null;
-      function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / duration, 1);
-        const easeProgress = progress * (2 - progress);
-        const currentVal = start + easeProgress * (end - start);
-        el.textContent = currentVal.toFixed(decimals) + suffix;
-        if (progress < 1) {
-          window.requestAnimationFrame(step);
-        } else {
-          el.textContent = end.toFixed(decimals) + suffix;
-        }
-      }
-      window.requestAnimationFrame(step);
+  /* ---- 1. Animated stat counters ---- */
+  function countTo(el, end, suffix, decimals, duration) {
+    if (!el || el.dataset.done) return;
+    el.dataset.done = '1';
+    var start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / duration, 1);
+      var eased = p * (2 - p);
+      el.textContent = (eased * end).toFixed(decimals) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = end.toFixed(decimals) + suffix;
     }
+    requestAnimationFrame(step);
+  }
+  function runCounters() {
+    countTo(document.getElementById('stat-uptime'), 99.9, '%', 1, 1600);
+    countTo(document.getElementById('stat-nodes'), 12, 'K+', 0, 1800);
+    countTo(document.getElementById('stat-projects'), 500, '+', 0, 2000);
+  }
 
-    function triggerAllAnimations() {
-      const uptimeEl = document.getElementById('stat-uptime');
-      const nodesEl = document.getElementById('stat-nodes');
-      const projectsEl = document.getElementById('stat-projects');
+  /* ---- 2. Scroll-stack dot navigation (desktop) ---- */
+  function initStackNav() {
+    var dots = Array.prototype.slice.call(document.querySelectorAll('.jc-dots__dot'));
+    var panels = document.querySelectorAll('.jc-panel');
+    if (!dots.length || !panels.length) return;
 
-      if (uptimeEl) animateCount(uptimeEl, 0.0, 99.9, '%', 1, 1600);
-      if (nodesEl) animateCount(nodesEl, 0, 12, 'K+', 0, 1800);
-      if (projectsEl) animateCount(projectsEl, 0, 500, '+', 0, 2000);
+    function onScroll() {
+      var vh = window.innerHeight || document.documentElement.clientHeight || 1;
+      var idx = Math.min(Math.round(window.scrollY / vh), panels.length - 1);
+      dots.forEach(function (d, i) { d.classList.toggle('is-active', i === idx); });
     }
+    dots.forEach(function (dot, i) {
+      dot.addEventListener('click', function () {
+        var vh = window.innerHeight || document.documentElement.clientHeight || 1;
+        window.scrollTo({ top: i * vh, behavior: 'smooth' });
+      });
+    });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 
-    function initCounterObserver() {
-      const target = document.getElementById('stat-uptime');
-      if (!target) {
-        triggerAllAnimations();
+  /* ---- 3. Newsletter (inline status, no page reload) ---- */
+  function initNewsletter() {
+    var form = document.getElementById('newsletter-form');
+    var status = document.getElementById('newsletter-status');
+    var btn = document.getElementById('newsletter-submit');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = (document.getElementById('newsletter-email') || {}).value || '';
+      status.className = 'jc-news__status';
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        status.className = 'jc-news__status jc-news__status--error';
+        status.textContent = 'Please enter a valid email address.';
         return;
       }
+      if (btn) { btn.disabled = true; btn.textContent = 'Subscribing…'; }
+      fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (data) {
+          status.textContent = (data && data.message) || 'Thanks for subscribing!';
+          form.reset();
+        })
+        .catch(function () {
+          status.className = 'jc-news__status jc-news__status--error';
+          status.textContent = 'Something went wrong. Please try again.';
+        })
+        .finally(function () { if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; } });
+    });
+  }
 
-      const fallbackTimer = setTimeout(() => {
-        triggerAllAnimations();
-      }, 1500);
-
-      const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            clearTimeout(fallbackTimer);
-            triggerAllAnimations();
-            obs.unobserve(entry.target);
-          }
-        });
-      }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-      });
-
-      const container = target.parentElement.parentElement;
-      if (container) {
-        observer.observe(container);
-      }
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initCounterObserver);
-    } else {
-      initCounterObserver();
-    }
-  })();
+  /* ---- init ---- */
+  function init() {
+    runCounters();          // hero is in view on load
+    initStackNav();
+    initNewsletter();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 </script>
