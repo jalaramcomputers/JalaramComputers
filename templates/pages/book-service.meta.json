@@ -1,9 +1,0 @@
-{
-  "title": "Book a Service — Jalaram Computers",
-  "bodyClass": "bg-alabaster text-charcoal font-sans min-h-screen flex flex-col jc-site",
-  "heroPreload": false,
-  "pageCss": [],
-  "pageStyles": "* { margin: 0; padding: 0; box-sizing: border-box; }\r\n    .field-input {\r\n      width: 100%;\r\n      padding: 0.75rem 1rem;\r\n      border: 1px solid #E8E8E8;\r\n      background: #faf8f5;\r\n      font-size: 0.875rem;\r\n      color: #0F2640;\r\n      outline: none;\r\n      transition: border-color 0.2s;\r\n      font-family: inherit;\r\n    }\r\n    .field-input:focus { border-color: #D4AF37; }\r\n    .field-input::placeholder { color: #9CA3AF; }\r\n    select.field-input {\r\n      -webkit-appearance: none;\r\n      -moz-appearance: none;\r\n      appearance: none;\r\n      background-image: url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230f2640' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>\");\r\n      background-repeat: no-repeat;\r\n      background-position: right 12px center;\r\n      background-size: 16px;\r\n      padding-right: 2.5rem;\r\n    }\r\n    label.field-label {\r\n      display: block;\r\n      font-size: 10px;\r\n      letter-spacing: 0.1em;\r\n      text-transform: uppercase;\r\n      font-weight: 700;\r\n      color: #0F2640;\r\n      margin-bottom: 0.375rem;\r\n    }\r\n    @keyframes fadeInUp {\r\n      from { opacity: 0; transform: translateY(16px); }\r\n      to { opacity: 1; transform: translateY(0); }\r\n    }\r\n    .anim { animation: fadeInUp 0.5s ease forwards; }",
-  "whatsappFloat": true,
-  "hasPageScripts": false
-}

@@ -1,9 +1,0 @@
-{
-  "title": "About — Jalaram Computers",
-  "bodyClass": "bg-alabaster text-charcoal font-sans jc-site",
-  "heroPreload": false,
-  "pageCss": [],
-  "pageStyles": "* { margin: 0; padding: 0; box-sizing: border-box; }",
-  "whatsappFloat": true,
-  "hasPageScripts": false
-}

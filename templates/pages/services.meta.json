@@ -1,9 +1,0 @@
-{
-  "title": "Services — Jalaram Computers",
-  "bodyClass": "bg-alabaster text-charcoal font-sans jc-site",
-  "heroPreload": false,
-  "pageCss": [],
-  "pageStyles": "* { margin: 0; padding: 0; box-sizing: border-box; }\r\n    .service-card:hover { border-color: rgba(212,175,55,0.5); transform: translateY(-2px); }",
-  "whatsappFloat": true,
-  "hasPageScripts": false
-}
