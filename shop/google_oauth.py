@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
 SCOPES = 'openid email profile'
 CALLBACK_PATH = '/account/google/callback/'
 
@@ -82,3 +83,21 @@ def exchange_auth_code(code: str, oauth_redirect_uri: str) -> dict:
         raise ValueError(f'token:{msg}')
 
     return data
+
+
+def get_user_info(access_token: str) -> dict:
+    """Fetch profile claims from Google's userinfo endpoint using an access token."""
+    req = urllib.request.Request(
+        GOOGLE_USERINFO_URL,
+        headers={'Authorization': f'Bearer {access_token}'},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            return json.loads(resp.read().decode())
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode() if exc.fp else ''
+        logger.warning('Google userinfo HTTP %s: %s', exc.code, raw[:120])
+        raise ValueError(f'userinfo_http:{exc.code}') from exc
+    except urllib.error.URLError as exc:
+        logger.warning('Google userinfo network error: %s', exc)
+        raise ValueError('userinfo_network') from exc

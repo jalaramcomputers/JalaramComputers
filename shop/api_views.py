@@ -19,7 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .google_auth import verify_google_id_token
-from .google_oauth import exchange_auth_code, redirect_uri
+from .google_oauth import exchange_auth_code, get_user_info, redirect_uri
 from .models import (
     ContactQuery,
     HeroSlideConfig,
@@ -105,6 +105,18 @@ def _user_payload(user):
 
 # ── Auth ────────────────────────────────────────────────────────────────────
 
+def _login_with_google_idinfo(request, idinfo: dict):
+    """Create or fetch a user from verified Google claims, then log them in."""
+    email = (idinfo.get('email') or '').strip().lower()
+    if not email or not EMAIL_RE.match(email):
+        raise ValueError('Google account has no usable email.')
+    if not idinfo.get('email_verified'):
+        raise ValueError('Please verify your Google email first.')
+    user = _get_or_create_google_user(email, idinfo)
+    login(request, user)
+    return user
+
+
 def _login_with_google_credential(request, credential: str):
     client_id = getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
     if not client_id:
@@ -116,15 +128,7 @@ def _login_with_google_credential(request, credential: str):
         logger.warning('Google ID token verify failed: %s', exc)
         raise ValueError('verify_failed') from exc
 
-    email = (idinfo.get('email') or '').strip().lower()
-    if not email or not EMAIL_RE.match(email):
-        raise ValueError('Google account has no usable email.')
-    if not idinfo.get('email_verified'):
-        raise ValueError('Please verify your Google email first.')
-
-    user = _get_or_create_google_user(email, idinfo)
-    login(request, user)
-    return user
+    return _login_with_google_idinfo(request, idinfo)
 
 
 @require_GET
@@ -234,19 +238,19 @@ def auth_google_callback(request):
 
         try:
             tokens = exchange_auth_code(code, oauth_redirect_uri)
-            credential = (tokens.get('id_token') or '').strip()
-            if not credential:
-                logger.warning('Google token response missing id_token: %s', list(tokens.keys()))
+            access_token = (tokens.get('access_token') or '').strip()
+            if not access_token:
+                logger.warning('Google token response missing access_token: %s', list(tokens.keys()))
                 return redirect('/account?google_error=token')
-            _login_with_google_credential(request, credential)
+            idinfo = get_user_info(access_token)
+            _login_with_google_idinfo(request, idinfo)
             request.session.save()
         except ValueError as exc:
             logger.warning('Google OAuth callback failed: %s', exc)
             reason = str(exc).split(':', 1)[0]
-            if reason in ('token_http', 'token', 'token_network', 'secret_missing'):
+            if reason in ('token_http', 'token', 'token_network', 'secret_missing',
+                          'userinfo_http', 'userinfo_network'):
                 return redirect('/account?google_error=token')
-            if reason == 'verify_failed':
-                return redirect('/account?google_error=verify')
             return redirect('/account?google_error=invalid')
 
         return redirect('/account')
