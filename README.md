@@ -61,18 +61,17 @@ you are doing (it can break `pip`).
 
 1. **New project** on [Railway](https://railway.app) → **Deploy from GitHub** → select this repo → branch `main`.
 2. **Add PostgreSQL** — Railway dashboard → **+ New** → **Database** → **PostgreSQL**.
-3. **Link database** — open your web service → **Variables** → **Add Reference** → `DATABASE_URL` from Postgres.
-4. **Set variables** (see `.env.railway.example`):
+3. **Link database** — open your **web service** → **Variables** → **+ New Variable** → **Add Reference** → select Postgres service → `DATABASE_URL`.
+4. **Set variables** (required — deploy will fail without these):
 
    | Variable | Value |
    | --- | --- |
    | `DEBUG` | `false` |
-   | `DJANGO_SECRET_KEY` | long random string |
-   | `ADMIN_PASSWORD` | your admin password (for first login) |
+   | `DJANGO_SECRET_KEY` | long random string (50+ chars) |
 
-   Railway auto-sets `RAILWAY_PUBLIC_DOMAIN`, `PORT`, and `DATABASE_URL`.
+   Railway auto-sets `RAILWAY_PUBLIC_DOMAIN`, `PORT`, and `DATABASE_URL` when Postgres is linked.
 
-5. **Deploy** — Railway runs `migrate` + `collectstatic` before start, then Gunicorn.
+5. **Deploy** — on each deploy the start script runs `migrate`, `collectstatic`, then Gunicorn.
 
 6. **Create admin** (first time only):
 

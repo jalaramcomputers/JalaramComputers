@@ -65,6 +65,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # PostgreSQL via DATABASE_URL (Railway injects this when Postgres is linked)
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
+_on_railway = bool(os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PUBLIC_DOMAIN'))
 if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
@@ -80,6 +81,11 @@ elif os.environ.get('USE_SQLITE', '').lower() in ('1', 'true', 'yes'):
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+elif _on_railway:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        'DATABASE_URL is required on Railway. Add a PostgreSQL database and link DATABASE_URL to this service.'
+    )
 else:
     DATABASES = {
         'default': {
