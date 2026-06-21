@@ -6,24 +6,26 @@ function initSplash() {
   if (!splash) return;
   document.body.classList.add('jc-splash-active');
 
+  let done = false;
   const dismiss = () => {
+    if (done) return;
+    done = true;
     splash.classList.add('is-hidden');
     document.body.classList.remove('jc-splash-active');
     sessionStorage.setItem('jc-splash-seen', '1');
-    setTimeout(() => splash.remove(), 700);
+    setTimeout(() => splash.remove(), 650);
   };
 
-  // Already seen this session → skip the wait.
-  if (sessionStorage.getItem('jc-splash-seen')) {
+  // Seen this session, or the visitor prefers reduced motion → don't linger.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (sessionStorage.getItem('jc-splash-seen') || reduce) {
     splash.style.transition = 'none';
     dismiss();
     return;
   }
 
-  const skip = document.getElementById('jc-splash-skip');
-  if (skip) skip.addEventListener('click', dismiss);
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  setTimeout(dismiss, reduce ? 400 : 2900);
+  splash.addEventListener('click', dismiss);
+  setTimeout(dismiss, 2400);
 }
 
 /* ── Mobile drawer ── */

@@ -293,33 +293,47 @@ body.jc-drawer-open { overflow: hidden; }
    SPLASH
    ============================================================ */
 #jc-splash {
-  position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse 120% 80% at 50% 0%, #1a3a5c 0%, #091a2e 55%, #060f1a 100%);
-  overflow: hidden; transition: opacity 0.65s var(--ease), visibility 0.65s var(--ease);
+  position: fixed; inset: 0; z-index: 99999; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 55%, var(--navy-dark) 100%);
+  overflow: hidden; transition: opacity 0.6s var(--ease), visibility 0.6s var(--ease);
 }
 #jc-splash.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-#jc-splash::before { content: ''; position: absolute; inset: -50%; background: conic-gradient(from 0deg at 50% 50%, transparent, rgba(212, 175, 55, 0.08), transparent 30%); animation: jcSplashSpin 8s linear infinite; }
-#jc-splash::after { content: ''; position: absolute; width: 140%; height: 1px; top: 50%; left: -20%; background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.35), transparent); animation: jcSplashScan 2.4s ease-in-out infinite; }
-@keyframes jcSplashSpin { to { transform: rotate(360deg); } }
-@keyframes jcSplashScan { 0%, 100% { transform: translateY(-120px); opacity: 0; } 50% { transform: translateY(120px); opacity: 1; } }
-.jc-splash__inner { position: relative; z-index: 1; text-align: center; padding: 2rem; animation: jcSplashRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
-@keyframes jcSplashRise { from { opacity: 0; transform: translateY(28px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.jc-splash__logo-wrap { position: relative; display: inline-block; margin-bottom: 1.5rem; }
-.jc-splash__logo-wrap::before { content: ''; position: absolute; inset: -18px; border-radius: 50%; border: 1px solid rgba(212, 175, 55, 0.25); animation: jcSplashPulse 2s ease-in-out infinite; }
-.jc-splash__logo-wrap::after { content: ''; position: absolute; inset: -8px; border-radius: 50%; background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%); animation: jcSplashGlow 2s ease-in-out infinite alternate; }
-@keyframes jcSplashPulse { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.06); opacity: 1; } }
-@keyframes jcSplashGlow { from { opacity: 0.4; } to { opacity: 1; } }
-.jc-splash__logo { height: 5rem; width: auto; object-fit: contain; filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)); animation: jcSplashLogoIn 1s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both; }
-@keyframes jcSplashLogoIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
-.jc-splash__title { font-family: var(--serif); font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 600; letter-spacing: 0.12em; color: #fff; margin: 0 0 0.35rem; animation: jcSplashFade 0.8s ease 0.35s both; }
-.jc-splash__tagline { font-family: var(--sans); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold); margin: 0 0 2rem; animation: jcSplashFade 0.8s ease 0.5s both; }
-@keyframes jcSplashFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.jc-splash__bar { width: min(220px, 70vw); height: 2px; margin: 0 auto; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; animation: jcSplashFade 0.8s ease 0.65s both; }
-.jc-splash__bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8942e, #d4af37, #f0d878); border-radius: 2px; animation: jcSplashLoad 2.2s var(--ease) 0.7s forwards; }
-@keyframes jcSplashLoad { to { width: 100%; } }
-.jc-splash__skip { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); font-family: var(--sans); font-size: 0.625rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(192, 192, 192, 0.45); background: none; border: none; cursor: pointer; padding: 0.5rem 1rem; transition: color 0.2s; animation: jcSplashFade 0.8s ease 1s both; }
-.jc-splash__skip:hover { color: var(--gold); }
+#jc-splash::before {
+  content: ''; position: absolute; width: 380px; height: 380px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.14) 0%, transparent 70%);
+  animation: jcSplashGlow 2.4s ease-in-out infinite alternate;
+}
+@keyframes jcSplashGlow { from { transform: scale(0.85); opacity: 0.6; } to { transform: scale(1.1); opacity: 1; } }
+.jc-splash__logo {
+  height: 5.25rem; width: auto; position: relative; z-index: 1; opacity: 0;
+  filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.4));
+  animation: jcSplashLogoIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+}
+@keyframes jcSplashLogoIn { from { opacity: 0; transform: scale(0.6) translateY(24px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.jc-splash__name {
+  position: relative; z-index: 1; margin-top: 1.6rem; padding: 0 1rem; opacity: 0; text-align: center;
+  font-family: var(--serif); font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 700;
+  letter-spacing: 0.14em; color: #fff; text-transform: uppercase;
+  animation: jcSplashTextIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
+}
+.jc-splash__name span { color: var(--gold); }
+@keyframes jcSplashTextIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.jc-splash__line {
+  position: relative; z-index: 1; height: 2px; width: 0; margin-top: 1.25rem;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  animation: jcSplashLine 0.7s ease 1.15s forwards;
+}
+@keyframes jcSplashLine { to { width: min(260px, 60vw); } }
+.jc-splash__tag {
+  position: relative; z-index: 1; margin-top: 1rem; padding: 0 1.5rem; opacity: 0; text-align: center;
+  font-family: var(--sans); font-size: 0.6875rem; letter-spacing: 0.32em; text-transform: uppercase;
+  color: rgba(192, 192, 192, 0.75);
+  animation: jcSplashTagIn 0.6s ease 1.45s forwards;
+}
+@keyframes jcSplashTagIn { to { opacity: 1; } }
 body.jc-splash-active { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { #jc-splash { display: none !important; } }
 
 /* ============================================================
    INNER PAGE HERO (shop/services/about/contact/etc.)
@@ -1066,10 +1080,24 @@ body.jc-splash-active { overflow: hidden; }
 .jc-empty--dashed { background: #f8fafc; border: 1px dashed var(--silver); border-radius: 0.75rem; padding: 2rem 1.5rem; }
 .jc-empty__sub { font-size: 0.78rem; color: var(--muted); max-width: 22rem; line-height: 1.55; margin: 0.5rem 0 1rem; }
 
+/* ============================================================
+   ERROR PAGES (404 / 500)
+   ============================================================ */
+.jc-error { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem;
+  background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 55%, var(--navy-dark) 100%); }
+.jc-error__inner { text-align: center; max-width: 32rem; }
+.jc-error__logo { height: 3.5rem; width: auto; margin: 0 auto 2rem; filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4)); }
+.jc-error__code { font-family: var(--serif); font-size: clamp(4rem, 14vw, 7rem); font-weight: 700; line-height: 1; color: var(--gold); letter-spacing: 0.05em; }
+.jc-error__title { font-family: var(--serif); font-size: clamp(1.5rem, 4vw, 2.25rem); font-weight: 600; color: #fff; margin: 0.5rem 0 1rem; }
+.jc-error__title em { font-style: italic; color: var(--silver); }
+.jc-error__text { color: rgba(192, 192, 192, 0.75); line-height: 1.7; margin-bottom: 2rem; }
+.jc-error__actions { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+.jc-error__actions .jc-btn--ghost { color: var(--silver); border-color: rgba(212, 175, 55, 0.4); }
+.jc-error__actions .jc-btn--ghost:hover { color: var(--gold); border-color: var(--gold); }
+
 /* ---- Reduced motion --------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   .hero-bg-layer.active, .jc-brands__track, .jc-scroll-hint i, .hero-line { animation: none !important; }
   .hero-line { opacity: 1; }
-  .jc-splash__bar-fill { width: 100%; }
 }
