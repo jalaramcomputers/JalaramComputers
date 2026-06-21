@@ -86,6 +86,8 @@ def contact(request):
 
 
 def account(request):
+    google_login_uri = request.build_absolute_uri('/account/google/callback/')
     return page(request, template='pages/account.html',
                 title='My Account — Jalaram Computers', active='account', whatsapp=False,
-                google_client_id=settings.GOOGLE_OAUTH_CLIENT_ID)
+                google_client_id=settings.GOOGLE_OAUTH_CLIENT_ID,
+                google_login_uri=google_login_uri)

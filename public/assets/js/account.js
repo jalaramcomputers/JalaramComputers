@@ -5,8 +5,18 @@ import { esc } from './products.js';
 const root = document.getElementById('account-root');
 const profileDot = document.getElementById('header-profile-dot');
 const googleClientId = root?.dataset.googleClientId || '';
+const googleLoginUri = root?.dataset.googleLoginUri || '';
+const preferGoogleRedirect = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
 let googleScriptPromise = null;
+let googleInitialized = false;
+
+const GOOGLE_ERRORS = {
+  csrf: 'Google sign-in expired. Please try again.',
+  missing: 'Google did not return a sign-in token. Please try again.',
+  invalid: 'Google sign-in could not be completed. Please try again.',
+  denied: 'Google sign-in was cancelled.',
+};
 
 function loadGoogleScript() {
   if (window.google?.accounts?.id) return Promise.resolve();
@@ -30,50 +40,83 @@ function loadGoogleScript() {
   return googleScriptPromise;
 }
 
-function showGoogleError(message) {
-  const loginErr = document.getElementById('login-error');
-  const registerErr = document.getElementById('register-error');
-  const activeErr = loginErr && !document.getElementById('login-form')?.hidden ? loginErr : registerErr;
-  if (activeErr) activeErr.textContent = message;
+function googleButtonWidth() {
+  const card = root?.querySelector('.jc-account__card');
+  const base = card?.clientWidth || window.innerWidth;
+  return Math.max(240, Math.min(400, Math.floor(base - 64)));
+}
+
+function showPanelError(panelId, message) {
+  const err = document.getElementById(`${panelId}-error`);
+  if (err) err.textContent = message || '';
 }
 
 async function initGoogleSignIn(onSuccess) {
   if (!googleClientId) return;
 
-  const host = document.getElementById('google-signin-host');
-  if (!host) return;
+  const hosts = root.querySelectorAll('[data-google-host]');
+  if (!hosts.length) return;
 
   try {
     await loadGoogleScript();
-    google.accounts.id.initialize({
-      client_id: googleClientId,
-      callback: async (response) => {
-        showGoogleError('');
-        host.classList.add('is-busy');
-        try {
-          const user = await authGoogle(response.credential);
-          onSuccess(user);
-        } catch (ex) {
-          showGoogleError((ex && ex.message) || 'Google sign-in failed.');
-          host.classList.remove('is-busy');
-        }
-      },
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    });
-    const width = Math.min(host.offsetWidth || 320, 400);
-    google.accounts.id.renderButton(host, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      text: 'continue_with',
-      shape: 'rectangular',
-      logo_alignment: 'left',
-      width,
+    if (!googleInitialized) {
+      const init = {
+        client_id: googleClientId,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        itp_support: true,
+      };
+      if (preferGoogleRedirect && googleLoginUri) {
+        init.login_uri = googleLoginUri;
+      } else {
+        init.callback = async (response) => {
+          showPanelError('login', '');
+          showPanelError('register', '');
+          try {
+            const user = await authGoogle(response.credential);
+            onSuccess(user);
+          } catch (ex) {
+            const msg = (ex && ex.message) || 'Google sign-in failed.';
+            showPanelError('login', msg);
+            showPanelError('register', msg);
+          }
+        };
+      }
+      google.accounts.id.initialize(init);
+      googleInitialized = true;
+    }
+
+    const width = googleButtonWidth();
+    hosts.forEach((host) => {
+      host.innerHTML = '';
+      google.accounts.id.renderButton(host, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'signup_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width,
+      });
     });
   } catch (ex) {
-    host.innerHTML = `<p class="jc-auth__error">${esc((ex && ex.message) || 'Google sign-in unavailable.')}</p>`;
+    hosts.forEach((host) => {
+      host.innerHTML = `<p class="jc-auth__error">${esc((ex && ex.message) || 'Google sign-in unavailable.')}</p>`;
+    });
   }
+}
+
+function switchAuthTab(tab) {
+  const loginPanel = document.getElementById('login-panel');
+  const registerPanel = document.getElementById('register-panel');
+  const isLogin = tab === 'login';
+  if (loginPanel) loginPanel.hidden = !isLogin;
+  if (registerPanel) registerPanel.hidden = isLogin;
+  root.querySelectorAll('.jc-auth__tabs button').forEach((btn) => {
+    btn.classList.toggle('is-active', btn.dataset.tab === tab);
+  });
+  showPanelError('login', '');
+  showPanelError('register', '');
 }
 
 function initials(user) {
@@ -93,7 +136,13 @@ function statusTone(status) {
   return 'pending';
 }
 
-function authView() {
+function googlePanelBlock(panelId) {
+  if (!googleClientId) return '';
+  return `<div class="jc-auth__divider"><span>or</span></div>
+    <div class="jc-auth__google" data-google-host="${panelId}"></div>`;
+}
+
+function authView(googleError = '') {
   setProfileDot(false);
   root.innerHTML = `<div class="jc-account__card jc-auth">
     <div class="jc-auth__brand">
@@ -114,33 +163,33 @@ function authView() {
       <button type="button" class="is-active" data-tab="login">Sign In</button>
       <button type="button" data-tab="register">Create Account</button>
     </div>
-    <form id="login-form" class="jc-auth__form">
-      <div class="jc-field"><label for="li-email">Email Address</label><input id="li-email" type="email" placeholder="you@example.com" autocomplete="email" required></div>
-      <div class="jc-field"><label for="li-pass">Password</label><input id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password" required></div>
-      <p class="jc-auth__error" id="login-error"></p>
-      <button type="submit" class="jc-btn jc-btn--navy jc-btn--block" id="login-submit">Sign In</button>
-    </form>
-    <form id="register-form" class="jc-auth__form" hidden>
-      <div class="jc-field"><label for="rg-name">Full Name</label><input id="rg-name" type="text" placeholder="e.g. Rajesh Gohil" autocomplete="name" required></div>
-      <div class="jc-field"><label for="rg-email">Email Address</label><input id="rg-email" type="email" placeholder="you@example.com" autocomplete="email" required></div>
-      <div class="jc-field"><label for="rg-pass">Password <span class="jc-auth__hint">(min. 6 characters)</span></label><input id="rg-pass" type="password" placeholder="••••••••" autocomplete="new-password" required></div>
-      <p class="jc-auth__error" id="register-error"></p>
-      <button type="submit" class="jc-btn jc-btn--accent jc-btn--block" id="register-submit">Create Account</button>
-    </form>
-    ${googleClientId ? `<div class="jc-auth__divider"><span>or</span></div><div id="google-signin-host" class="jc-auth__google"></div>` : ''}
+    <div id="login-panel" class="jc-auth__panel">
+      <form id="login-form" class="jc-auth__form">
+        <div class="jc-field"><label for="li-email">Email Address</label><input id="li-email" type="email" placeholder="you@example.com" autocomplete="email" required></div>
+        <div class="jc-field"><label for="li-pass">Password</label><input id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password" required></div>
+        <p class="jc-auth__error" id="login-error">${esc(googleError)}</p>
+        <button type="submit" class="jc-btn jc-btn--navy jc-btn--block" id="login-submit">Sign In</button>
+      </form>
+      ${googlePanelBlock('login')}
+    </div>
+    <div id="register-panel" class="jc-auth__panel" hidden>
+      <form id="register-form" class="jc-auth__form">
+        <div class="jc-field"><label for="rg-name">Full Name</label><input id="rg-name" type="text" placeholder="e.g. Rajesh Gohil" autocomplete="name" required></div>
+        <div class="jc-field"><label for="rg-email">Email Address</label><input id="rg-email" type="email" placeholder="you@example.com" autocomplete="email" required></div>
+        <div class="jc-field"><label for="rg-pass">Password <span class="jc-auth__hint">(min. 6 characters)</span></label><input id="rg-pass" type="password" placeholder="••••••••" autocomplete="new-password" required></div>
+        <p class="jc-auth__error" id="register-error"></p>
+        <button type="submit" class="jc-btn jc-btn--accent jc-btn--block" id="register-submit">Create Account</button>
+      </form>
+      ${googlePanelBlock('register')}
+    </div>
     <p class="jc-auth__terms">By continuing you agree to our terms &amp; privacy policy.</p>
   </div>`;
 
-  const loginForm = document.getElementById('login-form');
-  const registerForm = document.getElementById('register-form');
-  root.querySelectorAll('.jc-auth__tabs button').forEach((btn) => btn.addEventListener('click', () => {
-    root.querySelectorAll('.jc-auth__tabs button').forEach((b) => b.classList.toggle('is-active', b === btn));
-    const login = btn.dataset.tab === 'login';
-    loginForm.hidden = !login;
-    registerForm.hidden = login;
-  }));
+  root.querySelectorAll('.jc-auth__tabs button').forEach((btn) => {
+    btn.addEventListener('click', () => switchAuthTab(btn.dataset.tab));
+  });
 
-  loginForm.addEventListener('submit', async (e) => {
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const err = document.getElementById('login-error');
     const btn = document.getElementById('login-submit');
@@ -157,7 +206,7 @@ function authView() {
     }
   });
 
-  registerForm.addEventListener('submit', async (e) => {
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const err = document.getElementById('register-error');
     const btn = document.getElementById('register-submit');
@@ -183,7 +232,7 @@ function authView() {
     }
   });
 
-  initGoogleSignIn(dashboard);
+  requestAnimationFrame(() => initGoogleSignIn(dashboard));
 }
 
 function orderCard(o) {
@@ -262,12 +311,25 @@ async function dashboard(user) {
   }
 }
 
+function consumeGoogleErrorParam() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('google_error');
+  if (!code) return '';
+  const message = GOOGLE_ERRORS[code] || 'Google sign-in failed. Please try again.';
+  params.delete('google_error');
+  const qs = params.toString();
+  const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
+  window.history.replaceState({}, '', next);
+  return message;
+}
+
 (async function init() {
+  const googleError = consumeGoogleErrorParam();
   try {
     const user = await authMe();
     if (user) dashboard(user);
-    else authView();
+    else authView(googleError);
   } catch {
-    authView();
+    authView(googleError);
   }
 })();

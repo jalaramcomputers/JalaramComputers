@@ -110,14 +110,19 @@ Customers can sign up or sign in with Google on `/account`. Admin login at `/adm
    - `https://www.jalaramcomputers.com`
    - `https://jalaramcomputers.com`
    - Your Railway URL, e.g. `https://your-app.up.railway.app`
-5. Copy the **Client ID** (ends in `.apps.googleusercontent.com`). You do **not** need the client secret for this flow.
-6. Set environment variable:
+5. **Authorized redirect URIs** (required for mobile sign-in):
+   - `http://localhost:8000/account/google/callback/`
+   - `https://www.jalaramcomputers.com/account/google/callback/`
+   - `https://jalaramcomputers.com/account/google/callback/`
+6. Copy the **Client ID** (ends in `.apps.googleusercontent.com`). You do **not** need the client secret for this flow.
+7. Set environment variable:
    - Local: add `GOOGLE_OAUTH_CLIENT_ID=...` to `.env`
    - Railway: add `GOOGLE_OAUTH_CLIENT_ID` under Variables and redeploy
+8. **Publish the app** (Audience → Publish app) so any Google user can sign in — not just test users.
 
 If the variable is missing, email/password auth still works; the Google button is hidden.
 
-**Publishing:** While the OAuth app is in **Testing**, only Google accounts you add as test users can sign in. When ready for everyone, submit the consent screen for verification (or move to Production if your use case allows without full verification).
+**Live checklist:** JavaScript origins + redirect URIs must include every domain customers use (`www` and apex). The callback URL is `/account/google/callback/` on whichever host they open.
 
 ## Production deploy (generic)
 

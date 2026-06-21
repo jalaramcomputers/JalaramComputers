@@ -12,7 +12,9 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.core.mail import send_mail
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .google_auth import verify_google_id_token
@@ -100,6 +102,27 @@ def _user_payload(user):
 
 # ── Auth ────────────────────────────────────────────────────────────────────
 
+def _login_with_google_credential(request, credential: str):
+    client_id = getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
+    if not client_id:
+        raise ValueError('Google sign-in is not configured yet.')
+
+    try:
+        idinfo = verify_google_id_token(credential, client_id)
+    except ValueError as exc:
+        raise ValueError('Google sign-in could not be verified.') from exc
+
+    email = (idinfo.get('email') or '').strip().lower()
+    if not email or not EMAIL_RE.match(email):
+        raise ValueError('Google account has no usable email.')
+    if not idinfo.get('email_verified'):
+        raise ValueError('Please verify your Google email first.')
+
+    user = _get_or_create_google_user(email, idinfo)
+    login(request, user)
+    return user
+
+
 @require_GET
 def auth_me(request):
     return JsonResponse({'user': _user_payload(request.user)})
@@ -179,19 +202,32 @@ def auth_google(request):
         return JsonResponse({'ok': False, 'error': 'Missing Google credential.'}, status=400)
 
     try:
-        idinfo = verify_google_id_token(credential, client_id)
-    except ValueError:
-        return JsonResponse({'ok': False, 'error': 'Google sign-in could not be verified.'}, status=401)
+        user = _login_with_google_credential(request, credential)
+    except ValueError as exc:
+        return JsonResponse({'ok': False, 'error': str(exc) or 'Google sign-in could not be verified.'}, status=401)
 
-    email = (idinfo.get('email') or '').strip().lower()
-    if not email or not EMAIL_RE.match(email):
-        return JsonResponse({'ok': False, 'error': 'Google account has no usable email.'}, status=400)
-    if not idinfo.get('email_verified'):
-        return JsonResponse({'ok': False, 'error': 'Please verify your Google email first.'}, status=400)
-
-    user = _get_or_create_google_user(email, idinfo)
-    login(request, user)
     return JsonResponse({'ok': True, 'user': _user_payload(user)})
+
+
+@csrf_exempt
+@require_POST
+def auth_google_callback(request):
+    """Google redirect sign-in (mobile-safe). JWT verification is the primary security check."""
+    credential = (request.POST.get('credential') or '').strip()
+    if not credential:
+        return redirect('/account?google_error=missing')
+
+    csrf = (request.POST.get('g_csrf_token') or '').strip()
+    cookie_csrf = (request.COOKIES.get('g_csrf_token') or '').strip()
+    if csrf and cookie_csrf and csrf != cookie_csrf:
+        return redirect('/account?google_error=csrf')
+
+    try:
+        _login_with_google_credential(request, credential)
+    except ValueError:
+        return redirect('/account?google_error=invalid')
+
+    return redirect('/account')
 
 
 # ── Catalog & settings (read-only) ──────────────────────────────────────────

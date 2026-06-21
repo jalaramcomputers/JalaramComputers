@@ -15,6 +15,7 @@ urlpatterns = [
     path('about', views.about, name='about'),
     path('contact', views.contact, name='contact'),
     path('account', views.account, name='account'),
+    path('account/google/callback/', api_views.auth_google_callback, name='google-callback'),
 
     # ── Auth API ──
     path('api/auth/me/', api_views.auth_me, name='auth-me'),
