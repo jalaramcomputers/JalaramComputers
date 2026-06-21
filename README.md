@@ -50,7 +50,39 @@ $env:USE_SQLITE="true"; python manage.py migrate; python manage.py ensure_admin;
 | `SMTP_*`, `MAIL_FROM` | newsletter email (optional) |
 | `CSRF_TRUSTED_ORIGINS` | comma-separated https origins (production) |
 
-## Production deploy
+## Railway deploy (one-click)
+
+This repo includes everything Railway needs: `railway.toml`, `Procfile`, `nixpacks.toml`,
+`runtime.txt`, and auto-detection of `DATABASE_URL` / `RAILWAY_PUBLIC_DOMAIN`.
+
+### Steps
+
+1. **New project** on [Railway](https://railway.app) → **Deploy from GitHub** → select this repo → branch `main`.
+2. **Add PostgreSQL** — Railway dashboard → **+ New** → **Database** → **PostgreSQL**.
+3. **Link database** — open your web service → **Variables** → **Add Reference** → `DATABASE_URL` from Postgres.
+4. **Set variables** (see `.env.railway.example`):
+
+   | Variable | Value |
+   | --- | --- |
+   | `DEBUG` | `false` |
+   | `DJANGO_SECRET_KEY` | long random string |
+   | `ADMIN_PASSWORD` | your admin password (for first login) |
+
+   Railway auto-sets `RAILWAY_PUBLIC_DOMAIN`, `PORT`, and `DATABASE_URL`.
+
+5. **Deploy** — Railway runs `migrate` + `collectstatic` before start, then Gunicorn.
+
+6. **Create admin** (first time only):
+
+   ```bash
+   railway run python manage.py ensure_admin --email you@example.com --password 'your-password'
+   ```
+
+   Or set `ADMIN_PASSWORD` and run `bash scripts/railway_release.sh` from the Railway shell.
+
+Open the generated `*.up.railway.app` URL. Admin → `/admin`.
+
+## Production deploy (generic)
 
 ```bash
 pip install -r requirements.txt
