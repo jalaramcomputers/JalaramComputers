@@ -16,10 +16,10 @@ python manage.py migrate --noinput
 
 if [ -n "${ADMIN_PASSWORD:-}" ]; then
   echo "Ensuring owner admin (${ADMIN_USERNAME:-jcowner})..."
+  # Password is read from ADMIN_PASSWORD env inside ensure_admin (avoids shell $/# issues).
   python manage.py ensure_admin \
     --username "${ADMIN_USERNAME:-jcowner}" \
-    --email "${ADMIN_EMAIL:-jalaramcomputers21@gmail.com}" \
-    --password "$ADMIN_PASSWORD"
+    --email "${ADMIN_EMAIL:-jalaramcomputers21@gmail.com}"
 fi
 
 echo "Collecting static files..."
