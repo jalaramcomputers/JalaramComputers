@@ -7,8 +7,8 @@ python manage.py collectstatic --noinput
 
 if [ -n "${ADMIN_PASSWORD:-}" ]; then
   python manage.py ensure_admin \
-    --email "${ADMIN_EMAIL:-admin@jalaram.local}" \
-    --username "${ADMIN_USERNAME:-admin}" \
+    --username "${ADMIN_USERNAME:-jcowner}" \
+    --email "${ADMIN_EMAIL:-jalaramcomputers21@gmail.com}" \
     --password "$ADMIN_PASSWORD"
 fi
 

@@ -23,7 +23,7 @@ one stylesheet, and small vanilla ES modules.
 pip install -r requirements.txt
 copy .env.example .env          # then edit DB credentials if needed
 python manage.py migrate
-python manage.py ensure_admin   # creates admin@jalaram.local / admin123
+python manage.py ensure_admin   # creates jcowner / admin123 (local default)
 python manage.py runserver
 ```
 
@@ -73,13 +73,28 @@ you are doing (it can break `pip`).
 
 5. **Deploy** — on each deploy the start script runs `migrate`, `collectstatic`, then Gunicorn.
 
-6. **Create admin** (first time only):
+6. **Create admin** — either set Railway variables and redeploy:
+
+   | Variable | Value |
+   | --- | --- |
+   | `ADMIN_USERNAME` | `jcowner` |
+   | `ADMIN_EMAIL` | contact email (optional, not used to sign in) |
+   | `ADMIN_PASSWORD` | your admin password |
+
+   The start script runs `ensure_admin` automatically when `ADMIN_PASSWORD` is set. Only one superuser is kept (`jcowner` by default); any others are demoted.
+
+   **Or** run once in the Railway shell (must use the Nixpacks venv — plain `python` has no Django):
 
    ```bash
-   railway run python manage.py ensure_admin --email you@example.com --password 'your-password'
+   export PATH="/opt/venv/bin:$PATH"
+   python manage.py ensure_admin --username jcowner --password 'your-password'
    ```
 
-   Or set `ADMIN_PASSWORD` and run `bash scripts/railway_release.sh` from the Railway shell.
+   One-liner without exporting PATH:
+
+   ```bash
+   /opt/venv/bin/python manage.py ensure_admin --username jcowner --password 'your-password'
+   ```
 
 Open the generated `*.up.railway.app` URL. Admin → `/admin`.
 
@@ -89,7 +104,7 @@ Open the generated `*.up.railway.app` URL. Admin → `/admin`.
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
-python manage.py ensure_admin --email you@example.com --password '<strong>'
+python manage.py ensure_admin --username jcowner --password '<strong>'
 gunicorn config.wsgi:application
 ```
 

@@ -50,13 +50,31 @@ def red_to_gold(r: int, g: int, b: int) -> tuple[int, int, int]:
     return int(nr * 255), int(ng * 255), int(nb * 255)
 
 
+def is_logo_grey(r: int, g: int, b: int, a: int) -> bool:
+    """Mid-tone neutral pixels (COMPUTERS text, grey C arc) — not gold, not background."""
+    if a < 24:
+        return False
+    spread = max(r, g, b) - min(r, g, b)
+    if spread > 28:
+        return False
+    avg = (r + g + b) / 3
+    return 40 < avg < 195
+
+
+def grey_to_white(r: int, g: int, b: int, a: int) -> tuple[int, int, int, int]:
+    if is_logo_grey(r, g, b, a):
+        return 255, 255, 255, a
+    return r, g, b, a
+
+
 def process_pixel(r: int, g: int, b: int, a: int) -> tuple[int, int, int, int]:
     alpha = background_alpha(r, g, b, a)
     if alpha == 0:
         return r, g, b, 0
     if is_red(r, g, b, alpha):
         r, g, b = red_to_gold(r, g, b)
-    return r, g, b, alpha
+    r, g, b, a = grey_to_white(r, g, b, alpha)
+    return r, g, b, a
 
 
 def build_rgba(src: Path) -> Image.Image:

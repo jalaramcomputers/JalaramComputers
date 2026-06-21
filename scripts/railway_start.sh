@@ -14,6 +14,14 @@ fi
 echo "Running migrations..."
 python manage.py migrate --noinput
 
+if [ -n "${ADMIN_PASSWORD:-}" ]; then
+  echo "Ensuring owner admin (${ADMIN_USERNAME:-jcowner})..."
+  python manage.py ensure_admin \
+    --username "${ADMIN_USERNAME:-jcowner}" \
+    --email "${ADMIN_EMAIL:-jalaramcomputers21@gmail.com}" \
+    --password "$ADMIN_PASSWORD"
+fi
+
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 

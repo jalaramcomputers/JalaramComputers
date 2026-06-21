@@ -27,7 +27,7 @@ function authView() {
   root.innerHTML = `<div class="jc-account__card jc-auth">
     <div class="jc-auth__brand">
       <div class="jc-auth__brand-top">
-        <img src="/assets/images/logo.png?v=2" alt="" class="jc-auth__logo" width="120" height="48">
+        <img src="/assets/images/logo.png?v=3" alt="" class="jc-auth__logo" width="120" height="48">
         <div>
           <strong>Jalaram Computers</strong>
           <span>Mumbai's trusted IT partner</span>

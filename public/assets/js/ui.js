@@ -12,13 +12,10 @@ function initSplash() {
     done = true;
     splash.classList.add('is-hidden');
     document.body.classList.remove('jc-splash-active');
-    sessionStorage.setItem('jc-splash-seen', '1');
     setTimeout(() => splash.remove(), 650);
   };
 
-  // Seen this session, or the visitor prefers reduced motion → don't linger.
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (sessionStorage.getItem('jc-splash-seen') || reduce) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     splash.style.transition = 'none';
     dismiss();
     return;
