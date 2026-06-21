@@ -12,16 +12,43 @@ def _csv_env(name, default=''):
     return [x.strip() for x in os.environ.get(name, default).split(',') if x.strip()]
 
 
+def _host_from_url(url):
+    if not url:
+        return None
+    from urllib.parse import urlparse
+    return urlparse(url.strip()).hostname
+
+
+def _expand_host_aliases(hosts):
+    """If www.example.com is allowed, also allow example.com (and vice versa)."""
+    expanded = list(hosts)
+    for host in hosts:
+        if host.startswith('.') or host in ('localhost', '127.0.0.1', 'testserver'):
+            continue
+        if host.startswith('www.'):
+            apex = host[4:]
+            if apex and apex not in expanded:
+                expanded.append(apex)
+        elif '.' in host:
+            www = f'www.{host}'
+            if www not in expanded:
+                expanded.append(www)
+    return expanded
+
+
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev-only-change-in-production')
 DEBUG = os.environ.get('DEBUG', 'true').lower() in ('1', 'true', 'yes')
 
 RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
 ALLOWED_HOSTS = _csv_env('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+_site_host = _host_from_url(os.environ.get('SITE_URL', ''))
+if _site_host:
+    ALLOWED_HOSTS.append(_site_host)
 if RAILWAY_PUBLIC_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 if os.environ.get('RAILWAY_ENVIRONMENT'):
     ALLOWED_HOSTS.append('.railway.app')
-ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
+ALLOWED_HOSTS = list(dict.fromkeys(_expand_host_aliases(ALLOWED_HOSTS)))
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -138,6 +165,10 @@ SITE_URL = os.environ.get('SITE_URL') or (
 _csrf_origins = _csv_env('CSRF_TRUSTED_ORIGINS')
 if RAILWAY_PUBLIC_DOMAIN:
     _csrf_origins.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')
+for host in ALLOWED_HOSTS:
+    if host.startswith('.') or host in ('localhost', '127.0.0.1', 'testserver'):
+        continue
+    _csrf_origins.append(f'https://{host}')
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins))
 SHOP_NAME = os.environ.get('SHOP_NAME', 'Jalaram Computers')
 SHOP_PHONE = os.environ.get('SHOP_PHONE', '9892848643')
