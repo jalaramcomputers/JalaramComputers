@@ -52,8 +52,10 @@ $env:USE_SQLITE="true"; python manage.py migrate; python manage.py ensure_admin;
 
 ## Railway deploy (one-click)
 
-This repo includes everything Railway needs: `railway.toml`, `Procfile`, `nixpacks.toml`,
-`runtime.txt`, and auto-detection of `DATABASE_URL` / `RAILWAY_PUBLIC_DOMAIN`.
+This repo includes `railway.toml`, `Procfile`, `runtime.txt`, and auto-detection of
+`DATABASE_URL` / `RAILWAY_PUBLIC_DOMAIN`. Nixpacks auto-detects Python from
+`requirements.txt` — do not add a custom `nixpacks.toml` unless you know what
+you are doing (it can break `pip`).
 
 ### Steps
 
