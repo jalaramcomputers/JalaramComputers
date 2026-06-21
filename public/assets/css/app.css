@@ -24,6 +24,10 @@
   --sans:  'Inter', system-ui, -apple-system, sans-serif;
 
   --header-h: 4.25rem;
+  --tabbar-h: 3.75rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --touch-min: 44px;
   --container: 80rem;
 
   --radius-sm: 8px;
@@ -1100,4 +1104,279 @@ body.jc-splash-active { overflow: hidden; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   .hero-bg-layer.active, .jc-brands__track, .jc-scroll-hint i, .hero-line { animation: none !important; }
   .hero-line { opacity: 1; }
+}
+
+/* ============================================================
+   MOBILE WEB APP LAYOUT
+   Bottom tab bar · safe areas · touch targets · compact pages
+   ============================================================ */
+
+/* Bottom tab bar (phones / small tablets) */
+.jc-tabbar {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 55;
+  height: calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: linear-gradient(180deg, rgba(15, 38, 64, 0.97) 0%, rgba(9, 26, 46, 0.99) 100%);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 -8px 32px rgba(9, 26, 46, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.jc-tabbar::before {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.45), transparent);
+}
+.jc-tabbar__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: var(--tabbar-h);
+  padding: 0.35rem 0.25rem;
+  color: rgba(192, 192, 192, 0.65);
+  text-decoration: none;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s var(--ease);
+}
+.jc-tabbar__item iconify-icon { font-size: 1.35rem; }
+.jc-tabbar__item.is-active { color: var(--gold); }
+.jc-tabbar__icon-wrap { position: relative; display: inline-flex; }
+.jc-tabbar__badge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.55rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: var(--navy-deep);
+  background: var(--gold);
+  border-radius: 999px;
+}
+.jc-tabbar__badge[data-empty] { display: none; }
+
+@media (max-width: 1023px) {
+  .jc-tabbar { display: flex; }
+  body.jc-has-tabbar { padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom)); }
+  body.jc-has-tabbar { --toast-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 0.75rem); }
+
+  .jc-container { padding-left: 1rem; padding-right: 1rem; }
+
+  /* Header: compact, hide duplicate cart on smallest screens (tab bar has cart) */
+  .jc-header__inner { padding: 0 1rem; gap: 0.5rem; }
+  .jc-nav-cart { display: none; }
+  .jc-burger { min-width: var(--touch-min); min-height: var(--touch-min); }
+
+  /* Drawer → bottom sheet */
+  .jc-drawer__panel {
+    top: auto;
+    right: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: min(88vh, 32rem);
+    border-left: none;
+    border-top: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 1rem 1rem 0 0;
+    padding: 1.25rem 1rem calc(1rem + var(--safe-bottom));
+    transform: translateY(100%);
+  }
+  .jc-drawer.is-open .jc-drawer__panel { transform: translateY(0); }
+  .jc-drawer__nav a {
+    min-height: var(--touch-min);
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  .jc-drawer__cta { min-height: var(--touch-min); }
+
+  /* WhatsApp above tab bar */
+  .jc-whatsapp-float {
+    bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 0.75rem);
+    right: 1rem;
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  /* Prevent iOS input zoom */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select, textarea { font-size: 1rem; }
+
+  /* Touch-friendly buttons */
+  .jc-btn, .btn-gold { min-height: var(--touch-min); padding: 0.75rem 1.25rem; }
+  .jc-burger, .jc-nav-cart, .jc-account-link { min-width: var(--touch-min); min-height: var(--touch-min); }
+
+  /* Page heroes */
+  .jc-page-hero { padding: 2rem 0; }
+  .jc-page-hero h1 { font-size: clamp(1.65rem, 6vw, 2.25rem); }
+  .jc-page-hero p { font-size: 0.9rem; }
+  .jc-breadcrumb { flex-wrap: wrap; font-size: 0.6875rem; }
+
+  /* Home */
+  .jc-panel__inner { padding: 3rem 1rem; }
+  .jc-hero { min-height: min(78vh, 640px); }
+  .jc-hero__inner { padding: 5.5rem 1rem 2rem; }
+  #hero-title { font-size: clamp(1.85rem, 7vw, 2.5rem); }
+  #hero-subtitle { font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .jc-hero__controls { flex-wrap: wrap; gap: 0.75rem; }
+  .hero-nav-btn { min-width: var(--touch-min); min-height: var(--touch-min); }
+  .hero-dot { min-width: 2rem; min-height: 2rem; padding: 0.5rem; }
+  .jc-stats__grid { padding: 1rem; gap: 0.5rem; }
+  .jc-stats__label { font-size: 0.5625rem; }
+  .jc-cats { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .category-card { padding: 1.25rem 0.75rem; }
+  .jc-products { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .jc-services__grid { grid-template-columns: 1fr; }
+  .jc-offers { gap: 1rem; }
+  .offer-card { padding: 1.5rem 1.25rem; }
+  .jc-reviews { grid-template-columns: 1fr; }
+  .jc-scroll-hint { display: none; }
+
+  /* Product cards: show quick actions without hover */
+  @media (hover: none), (pointer: coarse) {
+    .product-card__quick {
+      transform: translateY(0);
+      background: rgba(15, 38, 64, 0.92);
+    }
+    .product-card__quick button {
+      min-width: var(--touch-min);
+      min-height: var(--touch-min);
+    }
+    .product-card__cta { min-height: var(--touch-min); }
+  }
+
+  /* Shop */
+  .jc-shop { padding-top: 1.5rem; padding-bottom: 2rem; }
+  .jc-shop__filter-toggle { min-height: var(--touch-min); }
+  .jc-shop__filters.is-open {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    margin: 0;
+    padding: calc(var(--header-h) + 1rem) 1rem calc(var(--tabbar-h) + var(--safe-bottom) + 1rem);
+    background: var(--cream);
+    overflow-y: auto;
+    gap: 1.5rem;
+  }
+  body.jc-filters-open { overflow: hidden; }
+  .jc-products--shop { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+
+  /* Product detail */
+  .jc-product { padding: 1.25rem 1rem 2rem; }
+  .jc-product__top { gap: 1.5rem; }
+  .jc-product__name { font-size: clamp(1.5rem, 5vw, 2rem); }
+  .jc-product__price .now { font-size: 1.75rem; }
+  .jc-product__specs { grid-template-columns: 1fr; gap: 1rem; padding: 1.25rem 0; }
+  .jc-product__actions { flex-direction: column; align-items: stretch; }
+  .jc-product__add { width: 100%; min-height: var(--touch-min); }
+  .jc-qty { width: 100%; justify-content: center; }
+  .jc-qty button { min-width: var(--touch-min); min-height: var(--touch-min); }
+  .jc-product__thumbs { grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+
+  /* Cart */
+  .jc-cart-page { padding: 1.25rem 0 1.5rem; }
+  .jc-cart__title { font-size: clamp(1.75rem, 6vw, 2.5rem); }
+  .jc-cart-item { padding: 1rem; }
+  .jc-cart-item__media { width: 4.5rem; height: 4.5rem; }
+  .jc-cart__aside .jc-summary {
+    position: sticky;
+    top: calc(var(--header-h) + 0.5rem);
+    z-index: 2;
+  }
+  .jc-summary__promo-row button { min-height: var(--touch-min); padding: 0 1rem; }
+  #proceed-checkout-btn { min-height: 3rem; font-size: 0.75rem; }
+
+  /* Checkout */
+  .jc-checkout { padding: 1.25rem 1rem 2rem; }
+  .jc-steps {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    gap: 1.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 2rem;
+    scrollbar-width: none;
+  }
+  .jc-steps::-webkit-scrollbar { display: none; }
+  .jc-steps li { flex-shrink: 0; font-size: 0.5625rem; }
+  .jc-form-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .jc-field--full { grid-column: 1; }
+  .jc-checkout__right { position: static; }
+  .jc-payment__opt { min-height: var(--touch-min); padding: 1rem; }
+  #place-order-btn { min-height: 3rem; }
+
+  /* Order confirmed */
+  .jc-confirm { padding: 1.5rem 1rem 2rem; }
+  .jc-confirm__timeline {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .jc-confirm__timeline li { flex-shrink: 0; font-size: 0.5625rem; }
+  .jc-confirm__overview > div { padding: 1.25rem; }
+  .jc-confirm__actions .jc-btn { width: 100%; }
+
+  /* Account */
+  .jc-account { padding: 1.25rem 1rem 2rem; }
+  .jc-auth__form { padding: 1.25rem; }
+  .jc-auth__tabs button { min-height: var(--touch-min); }
+  .jc-order__actions { flex-direction: column; }
+  .jc-order__actions .jc-btn { width: 100%; justify-content: center; }
+
+  /* Contact / book service */
+  .jc-contact { padding: 2rem 1rem 3rem; max-width: none; }
+  .jc-contact__card { padding: 1.25rem; }
+  .jc-book { padding: 1.25rem 1rem 2rem; }
+  .jc-book__form, .jc-book__success { padding: 1.25rem; }
+  .jc-promo-row { flex-direction: column; }
+  .jc-promo-row__input { border-radius: var(--radius-sm); border-right: 1px solid #e2e8f0; }
+  .jc-promo-row .jc-btn { border-radius: var(--radius-sm); width: 100%; min-height: var(--touch-min); }
+
+  /* About */
+  .jc-about { padding: 2rem 1rem 3rem; }
+  .jc-about__stats { grid-template-columns: 1fr; gap: 0; }
+  .jc-about__stats > div { padding: 1rem 0; border-left: none !important; border-bottom: 1px solid var(--silver); }
+  .jc-about__stats > div:last-child { border-bottom: none; }
+
+  /* Services */
+  .jc-services-page { padding: 2.5rem 0 3rem; }
+
+  /* Footer: compact */
+  .jc-footer { padding: 2.5rem 0 1.5rem; }
+  .jc-footer__inner { padding: 0 1rem; }
+  .jc-footer__grid { gap: 2rem; }
+  .jc-footer__bottom { text-align: center; }
+}
+
+@media (max-width: 380px) {
+  .jc-products, .jc-products--shop { grid-template-columns: 1fr; }
+  .jc-cats { grid-template-columns: 1fr 1fr; }
+  .jc-tabbar__item span:not(.jc-tabbar__badge) { font-size: 0.5rem; }
+}
+
+/* Tablets: show header cart again, hide tab bar */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .jc-nav-cart { display: inline-flex; }
 }

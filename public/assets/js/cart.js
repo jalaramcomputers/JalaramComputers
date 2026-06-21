@@ -79,7 +79,7 @@ export function showToast(message) {
     el = document.createElement('div');
     el.id = 'jc-toast';
     el.style.cssText =
-      'position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%) translateY(1rem);' +
+      'position:fixed;left:50%;bottom:var(--toast-bottom,5.5rem);transform:translateX(-50%) translateY(1rem);' +
       'z-index:9000;background:#091A2E;color:#fff;font:600 0.8rem/1.4 Inter,sans-serif;' +
       'letter-spacing:0.02em;padding:0.75rem 1.25rem;border:1px solid rgba(212,175,55,0.4);' +
       'border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.3);opacity:0;' +

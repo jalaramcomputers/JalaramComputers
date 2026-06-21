@@ -15,7 +15,7 @@ NAV_LINKS = [
 
 @ensure_csrf_cookie
 def page(request, *, template, title, active=None, body_class='',
-         splash=False, whatsapp=True, hero_preload=False):
+         splash=False, whatsapp=True, hero_preload=False, tabbar=True):
     ctx = {
         'title': title,
         'active_nav': active,
@@ -24,6 +24,7 @@ def page(request, *, template, title, active=None, body_class='',
         'show_splash': splash,
         'whatsapp_float': whatsapp,
         'hero_preload': hero_preload,
+        'show_tabbar': tabbar,
     }
     response = render(request, template, ctx)
     response['Cache-Control'] = 'no-store, no-cache, must-revalidate'
@@ -49,17 +50,17 @@ def product(request):
 
 def cart(request):
     return page(request, template='pages/cart.html',
-                title='Your Cart — Jalaram Computers')
+                title='Your Cart — Jalaram Computers', active='cart')
 
 
 def checkout(request):
     return page(request, template='pages/checkout.html',
-                title='Checkout — Jalaram Computers', whatsapp=False)
+                title='Checkout — Jalaram Computers', whatsapp=False, tabbar=False)
 
 
 def order_confirmed(request):
     return page(request, template='pages/order-confirmed.html',
-                title='Order Confirmed — Jalaram Computers', whatsapp=False)
+                title='Order Confirmed — Jalaram Computers', whatsapp=False, tabbar=False)
 
 
 def services(request):
@@ -84,4 +85,4 @@ def contact(request):
 
 def account(request):
     return page(request, template='pages/account.html',
-                title='My Account — Jalaram Computers', whatsapp=False)
+                title='My Account — Jalaram Computers', active='account', whatsapp=False)

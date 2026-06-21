@@ -123,7 +123,14 @@ function initClear() {
 function initToggle() {
   const btn = document.getElementById('filter-toggle');
   const filters = document.getElementById('shop-filters');
-  if (btn) btn.addEventListener('click', () => filters.classList.toggle('is-open'));
+  if (!btn || !filters) return;
+  const setOpen = (open) => {
+    filters.classList.toggle('is-open', open);
+    document.body.classList.toggle('jc-filters-open', open);
+    btn.setAttribute('aria-expanded', String(open));
+  };
+  btn.addEventListener('click', () => setOpen(!filters.classList.contains('is-open')));
+  document.getElementById('clear-filters-btn')?.addEventListener('click', () => setOpen(false));
 }
 
 sortSelect.addEventListener('change', () => { state.sort = sortSelect.value; apply(); });

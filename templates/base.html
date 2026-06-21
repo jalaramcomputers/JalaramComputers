@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#091A2E">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jalaram">
   <title>{{ title }}</title>
   <meta name="description" content="Jalaram Computers — computers, laptops, accessories, repair services, networking and CCTV solutions in Mumbai.">
 
@@ -15,10 +20,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
 
   <link rel="icon" href="/assets/images/favicon.png">
-  <link rel="stylesheet" href="/assets/css/app.css?v=1">
+  <link rel="manifest" href="/assets/manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/css/app.css?v=3">
   <script src="/assets/js/iconify-icon.min.js" defer></script>
 </head>
-<body class="jc-site{% if body_class %} {{ body_class }}{% endif %}">
+<body class="jc-site{% if body_class %} {{ body_class }}{% endif %}{% if show_tabbar %} jc-has-tabbar{% endif %}">
 
   {% if show_splash %}{% include 'partials/splash.html' %}{% endif %}
 
@@ -34,6 +40,8 @@
     <iconify-icon icon="mdi:whatsapp"></iconify-icon>
   </a>
   {% endif %}
+
+  {% if show_tabbar %}{% include 'partials/tabbar.html' %}{% endif %}
 
   <script type="module" src="/assets/js/ui.js?v=1"></script>
   <script type="module" src="/assets/js/cart.js?v=1"></script>
