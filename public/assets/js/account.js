@@ -8,8 +8,10 @@ const googleOAuthEnabled = root?.dataset.googleOauth === '1';
 
 const GOOGLE_ERRORS = {
   config: 'Google sign-in is not configured on the server yet.',
-  csrf: 'Google sign-in expired. Please try again.',
+  csrf: 'Google sign-in session expired. Please try again.',
   missing: 'Google did not return a sign-in token. Please try again.',
+  token: 'Google could not complete sign-in. Check GOOGLE_OAUTH_CLIENT_SECRET in Railway matches Google Console.',
+  verify: 'Google sign-in token could not be verified. Check GOOGLE_OAUTH_CLIENT_ID matches your OAuth client.',
   invalid: 'Google sign-in could not be completed. Please try again.',
   denied: 'Google sign-in was cancelled.',
 };

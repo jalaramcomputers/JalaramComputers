@@ -5,6 +5,7 @@ happens through the Django admin (shop/admin.py), so there is no admin JSON
 surface to secure or maintain.
 """
 import json
+import logging
 import re
 import secrets
 
@@ -32,6 +33,7 @@ from .serializers import order_from_frontend, service_booking_from_frontend
 
 UserModel = get_user_model()
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+logger = logging.getLogger(__name__)
 
 
 def _unique_username(base: str) -> str:
@@ -111,7 +113,8 @@ def _login_with_google_credential(request, credential: str):
     try:
         idinfo = verify_google_id_token(credential, client_id)
     except ValueError as exc:
-        raise ValueError('Google sign-in could not be verified.') from exc
+        logger.warning('Google ID token verify failed: %s', exc)
+        raise ValueError('verify_failed') from exc
 
     email = (idinfo.get('email') or '').strip().lower()
     if not email or not EMAIL_RE.match(email):
@@ -227,13 +230,23 @@ def auth_google_callback(request):
         if not code:
             return redirect('/account?google_error=missing')
 
+        oauth_redirect_uri = request.session.pop('google_oauth_redirect_uri', None) or redirect_uri(request)
+
         try:
-            tokens = exchange_auth_code(request, code)
+            tokens = exchange_auth_code(code, oauth_redirect_uri)
             credential = (tokens.get('id_token') or '').strip()
             if not credential:
-                raise ValueError('missing id_token')
+                logger.warning('Google token response missing id_token: %s', list(tokens.keys()))
+                return redirect('/account?google_error=token')
             _login_with_google_credential(request, credential)
-        except ValueError:
+            request.session.save()
+        except ValueError as exc:
+            logger.warning('Google OAuth callback failed: %s', exc)
+            reason = str(exc).split(':', 1)[0]
+            if reason in ('token_http', 'token', 'token_network', 'secret_missing'):
+                return redirect('/account?google_error=token')
+            if reason == 'verify_failed':
+                return redirect('/account?google_error=verify')
             return redirect('/account?google_error=invalid')
 
         return redirect('/account')

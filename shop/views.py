@@ -7,7 +7,7 @@ from django.conf import settings
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .google_oauth import start_url
+from .google_oauth import redirect_uri, start_url
 
 NAV_LINKS = [
     {'href': '/', 'label': 'Home', 'key': 'home'},
@@ -101,5 +101,8 @@ def google_oauth_start(request):
     if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
         return redirect('/account?google_error=config')
     state = secrets.token_urlsafe(32)
+    oauth_redirect_uri = redirect_uri(request)
     request.session['google_oauth_state'] = state
-    return redirect(start_url(request, state))
+    request.session['google_oauth_redirect_uri'] = oauth_redirect_uri
+    request.session.save()
+    return redirect(start_url(request, state, oauth_redirect_uri))

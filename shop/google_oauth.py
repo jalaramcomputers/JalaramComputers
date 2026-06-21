@@ -1,9 +1,13 @@
 """Server-side Google OAuth 2.0 (authorization code flow). No GIS popup."""
 import json
+import logging
+import urllib.error
 import urllib.request
 from urllib import parse
 
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
@@ -27,11 +31,10 @@ def redirect_uri(request=None) -> str:
     return f'http://localhost:8000{CALLBACK_PATH}'
 
 
-def start_url(request, state: str) -> str:
-    uri = redirect_uri(request)
+def start_url(request, state: str, oauth_redirect_uri: str) -> str:
     params = {
         'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
-        'redirect_uri': uri,
+        'redirect_uri': oauth_redirect_uri,
         'response_type': 'code',
         'scope': SCOPES,
         'state': state,
@@ -41,21 +44,41 @@ def start_url(request, state: str) -> str:
     return f'{GOOGLE_AUTH_URL}?{parse.urlencode(params)}'
 
 
-def exchange_auth_code(http_request, code: str) -> dict:
+def exchange_auth_code(code: str, oauth_redirect_uri: str) -> dict:
     secret = getattr(settings, 'GOOGLE_OAUTH_CLIENT_SECRET', '')
     if not secret:
-        raise ValueError('Google OAuth client secret is not configured.')
+        raise ValueError('secret_missing')
 
-    uri = redirect_uri(http_request)
     body = parse.urlencode({
         'code': code,
         'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
         'client_secret': secret,
-        'redirect_uri': uri,
+        'redirect_uri': oauth_redirect_uri,
         'grant_type': 'authorization_code',
     }).encode()
 
     req = urllib.request.Request(GOOGLE_TOKEN_URL, data=body, method='POST')
     req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        return json.loads(resp.read().decode())
+
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            data = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode() if exc.fp else ''
+        try:
+            err = json.loads(raw)
+            msg = err.get('error_description') or err.get('error') or raw
+        except json.JSONDecodeError:
+            msg = raw or str(exc)
+        logger.warning('Google token HTTP %s: %s', exc.code, msg)
+        raise ValueError(f'token_http:{msg[:120]}') from exc
+    except urllib.error.URLError as exc:
+        logger.warning('Google token network error: %s', exc)
+        raise ValueError('token_network') from exc
+
+    if data.get('error'):
+        msg = data.get('error_description') or data.get('error')
+        logger.warning('Google token error: %s', msg)
+        raise ValueError(f'token:{msg}')
+
+    return data
