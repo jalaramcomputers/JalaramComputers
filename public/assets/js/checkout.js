@@ -64,10 +64,8 @@ async function placeOrder() {
   if (!cart.length) return;
   const ship = shipping();
   const t = computeTotals({ shipping: ship });
-  const orderId = `JC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
   const order = {
-    orderId,
     date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }),
     status: 'Processing',
     paid: payment() === 'gateway',
@@ -84,7 +82,8 @@ async function placeOrder() {
   placeBtn.disabled = true;
   placeBtn.textContent = 'Processing…';
   try {
-    await saveOrder(order);
+    const res = await saveOrder(order);
+    const orderId = (res && res.order && res.order.orderId) || '';
     sessionStorage.setItem('jc-last-order', orderId);
     clearCart();
     location.href = `/order-confirmed?id=${encodeURIComponent(orderId)}`;

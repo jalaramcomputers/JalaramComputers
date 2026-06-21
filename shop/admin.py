@@ -12,7 +12,7 @@ from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
 from django.urls import path, reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -38,8 +38,17 @@ REPAIR_STATUS_CHOICES = ['Diagnosing', 'Awaiting Parts', 'Repairing', 'Ready', '
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
+_BR = mark_safe('<br>')
+
+
 def _inr(val):
     return f'₹{Decimal(val or 0):,.0f}'
+
+
+def _stacked(values):
+    """Join values with <br>, escaping each (safe for user-supplied data)."""
+    rows = [(v,) for v in values if v]
+    return format_html_join(_BR, '{}', rows) or '—'
 
 
 def _status_badge(status, tone='default'):
@@ -370,32 +379,30 @@ class OrderAdmin(admin.ModelAdmin):
     @admin.display(description='Customer summary')
     def customer_preview(self, obj):
         c = obj.customer or {}
-        return mark_safe('<br>'.join(filter(None, [
-            f"<strong>{c.get('name', '')}</strong>",
-            c.get('email', ''), c.get('phone', ''),
-        ])))
+        name = c.get('name') or ''
+        extra = _stacked([c.get('email'), c.get('phone')])
+        if not name:
+            return extra
+        return format_html('<strong>{}</strong><br>{}', name, extra if extra != '—' else '')
 
     @admin.display(description='Shipping summary')
     def shipping_preview(self, obj):
         s = obj.shipping_details or {}
-        parts = [s.get('address'), s.get('city'), s.get('state'), s.get('pincode'), s.get('method')]
-        return mark_safe('<br>'.join(p for p in parts if p) or '—')
+        return _stacked([s.get('address'), s.get('city'), s.get('state'), s.get('pincode'), s.get('method')])
 
     @admin.display(description='Billing summary')
     def billing_preview(self, obj):
         b = obj.billing_details or {}
-        if not b:
-            return '—'
-        return mark_safe('<br>'.join(f'{k}: {v}' for k, v in b.items() if v))
+        rows = [(k, v) for k, v in b.items() if v]
+        return format_html_join(_BR, '{}: {}', rows) or '—'
 
     @admin.display(description='Items summary')
     def items_preview(self, obj):
-        rows = []
-        for it in (obj.items or []):
-            qty = it.get('quantity', 1)
-            price = it.get('price', 0)
-            rows.append(f"{it.get('name', 'Item')} × {qty} — {_inr(price * qty)}")
-        return mark_safe('<br>'.join(rows) or '—')
+        rows = [
+            (it.get('name', 'Item'), it.get('quantity', 1), _inr((it.get('price', 0) or 0) * (it.get('quantity', 1) or 1)))
+            for it in (obj.items or [])
+        ]
+        return format_html_join(_BR, '{} × {} — {}', rows) or '—'
 
     @admin.action(description='Mark as Processing')
     def mark_processing(self, request, queryset):
