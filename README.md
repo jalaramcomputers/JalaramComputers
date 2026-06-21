@@ -114,15 +114,19 @@ Customers can sign up or sign in with Google on `/account`. Admin login at `/adm
    - `http://localhost:8000/account/google/callback/`
    - `https://www.jalaramcomputers.com/account/google/callback/`
    - `https://jalaramcomputers.com/account/google/callback/`
-6. Copy the **Client ID** (ends in `.apps.googleusercontent.com`). You do **not** need the client secret for this flow.
-7. Set environment variable:
-   - Local: add `GOOGLE_OAUTH_CLIENT_ID=...` to `.env`
-   - Railway: add `GOOGLE_OAUTH_CLIENT_ID` under Variables and redeploy
-8. **Publish the app** (Audience → Publish app) so any Google user can sign in — not just test users.
+6. Copy the **Client ID** and **Client secret** from the same OAuth client page.
+7. Set environment variables:
+   - `GOOGLE_OAUTH_CLIENT_ID` — ends in `.apps.googleusercontent.com`
+   - `GOOGLE_OAUTH_CLIENT_SECRET` — from Google Cloud Credentials (required for sign-in)
+   - Local: add both to `.env`
+   - Railway: add both under Variables and redeploy
+8. **Publish the app** (Audience → Publish app) so any Google user can sign in.
 
-If the variable is missing, email/password auth still works; the Google button is hidden.
+If either Google variable is missing, email/password auth still works; the Google button is hidden.
 
-**Live checklist:** JavaScript origins + redirect URIs must include every domain customers use (`www` and apex). The callback URL is `/account/google/callback/` on whichever host they open.
+**How sign-in works:** clicking **Continue with Google** sends the user to Google in the **same tab** (no popup). After they approve, they return to your site and are logged in.
+
+**Live checklist:** JavaScript origins + redirect URIs must include every domain customers use (`www` and apex). Redirect URI: `/account/google/callback/`
 
 ## Production deploy (generic)
 

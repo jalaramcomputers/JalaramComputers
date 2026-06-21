@@ -9,12 +9,12 @@
 </section>
 
 <main class="jc-account jc-container">
-  <div id="account-root"{% if google_client_id %} data-google-client-id="{{ google_client_id }}" data-google-login-uri="{{ google_login_uri }}"{% endif %}>
+  <div id="account-root"{% if google_oauth_enabled %} data-google-oauth="1"{% endif %}>
     <div class="jc-empty" style="min-height:30vh"><iconify-icon icon="lucide:loader-2" class="jc-spin"></iconify-icon><p>Loading your account…</p></div>
   </div>
 </main>
 {% endblock %}
 
 {% block page_scripts %}
-<script type="module" src="/assets/js/account.js?v=4"></script>
+<script type="module" src="/assets/js/account.js?v=6"></script>
 {% endblock %}

@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from .google_auth import verify_google_id_token
+from .google_oauth import exchange_auth_code
 from .models import (
     ContactQuery,
     HeroSlideConfig,
@@ -210,24 +211,50 @@ def auth_google(request):
 
 
 @csrf_exempt
-@require_POST
 def auth_google_callback(request):
-    """Google redirect sign-in (mobile-safe). JWT verification is the primary security check."""
-    credential = (request.POST.get('credential') or '').strip()
-    if not credential:
-        return redirect('/account?google_error=missing')
+    """OAuth code flow (GET) or legacy GIS credential POST."""
+    if request.method == 'GET':
+        if request.GET.get('error'):
+            return redirect('/account?google_error=denied')
 
-    csrf = (request.POST.get('g_csrf_token') or '').strip()
-    cookie_csrf = (request.COOKIES.get('g_csrf_token') or '').strip()
-    if csrf and cookie_csrf and csrf != cookie_csrf:
-        return redirect('/account?google_error=csrf')
+        state = (request.GET.get('state') or '').strip()
+        expected = request.session.pop('google_oauth_state', None)
+        if not state or not expected or state != expected:
+            return redirect('/account?google_error=csrf')
 
-    try:
-        _login_with_google_credential(request, credential)
-    except ValueError:
-        return redirect('/account?google_error=invalid')
+        code = (request.GET.get('code') or '').strip()
+        if not code:
+            return redirect('/account?google_error=missing')
 
-    return redirect('/account')
+        try:
+            tokens = exchange_auth_code(request, code)
+            credential = (tokens.get('id_token') or '').strip()
+            if not credential:
+                raise ValueError('missing id_token')
+            _login_with_google_credential(request, credential)
+        except ValueError:
+            return redirect('/account?google_error=invalid')
+
+        return redirect('/account')
+
+    if request.method == 'POST':
+        credential = (request.POST.get('credential') or '').strip()
+        if not credential:
+            return redirect('/account?google_error=missing')
+
+        csrf = (request.POST.get('g_csrf_token') or '').strip()
+        cookie_csrf = (request.COOKIES.get('g_csrf_token') or '').strip()
+        if csrf and cookie_csrf and csrf != cookie_csrf:
+            return redirect('/account?google_error=csrf')
+
+        try:
+            _login_with_google_credential(request, credential)
+        except ValueError:
+            return redirect('/account?google_error=invalid')
+
+        return redirect('/account')
+
+    return redirect('/account?google_error=missing')
 
 
 # ── Catalog & settings (read-only) ──────────────────────────────────────────

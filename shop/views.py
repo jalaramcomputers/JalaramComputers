@@ -1,9 +1,13 @@
 """Public page views. Thin renderers — all data is loaded client-side via the
 JSON API in ``api_views`` (kept). Page metadata lives here, not in JSON files."""
 
+import secrets
+
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
+
+from .google_oauth import start_url
 
 NAV_LINKS = [
     {'href': '/', 'label': 'Home', 'key': 'home'},
@@ -86,8 +90,16 @@ def contact(request):
 
 
 def account(request):
-    google_login_uri = request.build_absolute_uri('/account/google/callback/')
     return page(request, template='pages/account.html',
                 title='My Account — Jalaram Computers', active='account', whatsapp=False,
-                google_client_id=settings.GOOGLE_OAUTH_CLIENT_ID,
-                google_login_uri=google_login_uri)
+                google_oauth_enabled=bool(
+                    settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET
+                ))
+
+
+def google_oauth_start(request):
+    if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
+        return redirect('/account?google_error=config')
+    state = secrets.token_urlsafe(32)
+    request.session['google_oauth_state'] = state
+    return redirect(start_url(request, state))
