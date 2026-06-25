@@ -622,7 +622,7 @@ body.jc-splash-active { overflow: hidden; }
 .jc-empty--span { grid-column: 1 / -1; }
 .jc-empty iconify-icon { font-size: 2.5rem; color: rgba(26, 58, 92, 0.3); }
 .jc-empty p { font-size: 0.9rem; }
-.jc-empty a { color: var(--navy); font-weight: 600; text-decoration: underline; }
+.jc-empty a:not(.jc-btn) { color: var(--navy); font-weight: 600; text-decoration: underline; }
 .jc-panel--navy .jc-empty, .jc-panel--deep .jc-empty { color: rgba(192, 192, 192, 0.7); }
 
 /* Services panel */

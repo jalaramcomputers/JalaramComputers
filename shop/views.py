@@ -1,6 +1,7 @@
 """Public page views. Thin renderers — all data is loaded client-side via the
 JSON API in ``api_views`` (kept). Page metadata lives here, not in JSON files."""
 
+import re
 import secrets
 
 from django.conf import settings
@@ -18,6 +19,13 @@ NAV_LINKS = [
 ]
 
 
+def _whatsapp_number() -> str:
+    """Return a digits-only WhatsApp number with Indian country code."""
+    raw = getattr(settings, 'SHOP_PHONE', '9892848643')
+    digits = re.sub(r'\D', '', raw)
+    return digits if digits.startswith('91') else f'91{digits}'
+
+
 @ensure_csrf_cookie
 def page(request, *, template, title, active=None, body_class='',
          splash=False, whatsapp=True, hero_preload=False, tabbar=True, **extra):
@@ -28,6 +36,7 @@ def page(request, *, template, title, active=None, body_class='',
         'body_class': body_class,
         'show_splash': splash,
         'whatsapp_float': whatsapp,
+        'whatsapp_number': _whatsapp_number(),
         'hero_preload': hero_preload,
         'show_tabbar': tabbar,
     }

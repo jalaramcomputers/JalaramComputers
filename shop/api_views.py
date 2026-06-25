@@ -13,6 +13,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -330,7 +331,25 @@ def auth_google_callback(request):
 
 @require_GET
 def products_list(request):
-    return JsonResponse([p.to_frontend() for p in Product.objects.all()], safe=False)
+    qs = Product.objects.all()
+    page_param = request.GET.get('page')
+    if page_param is not None:
+        try:
+            page_num = max(1, int(page_param))
+            page_size = min(max(1, int(request.GET.get('pageSize', 50))), 200)
+        except (ValueError, TypeError):
+            page_num, page_size = 1, 50
+        total = qs.count()
+        offset = (page_num - 1) * page_size
+        return JsonResponse({
+            'products': [p.to_frontend() for p in qs[offset:offset + page_size]],
+            'total': total,
+            'page': page_num,
+            'pageSize': page_size,
+            'pages': -(-total // page_size),
+        })
+    # No page param — flat list for backwards-compatibility with existing JS callers.
+    return JsonResponse([p.to_frontend() for p in qs], safe=False)
 
 
 @require_GET
@@ -378,23 +397,23 @@ def _generate_order_id():
 def orders_collection(request):
     if request.method == 'GET':
         if _is_staff_user(request.user):
-            return JsonResponse([o.to_frontend() for o in Order.objects.all()], safe=False)
+            return JsonResponse(
+                [o.to_frontend() for o in Order.objects.order_by('-created_at')],
+                safe=False,
+            )
         if not request.user.is_authenticated:
             return JsonResponse([], safe=False)
-        email = request.user.email.lower()
-        seen = set()
-        orders = []
-        for o in Order.objects.filter(user=request.user):
-            seen.add(o.order_id)
-            orders.append(o.to_frontend())
-        for o in Order.objects.filter(user_id_str=str(request.user.pk)).exclude(order_id__in=seen):
-            seen.add(o.order_id)
-            orders.append(o.to_frontend())
-        if email:
-            for o in Order.objects.filter(customer__email__iexact=email).exclude(order_id__in=seen):
-                seen.add(o.order_id)
-                orders.append(o.to_frontend())
-        return JsonResponse(orders, safe=False)
+        orders = (
+            Order.objects
+            .filter(
+                Q(user=request.user)
+                | Q(user_id_str=str(request.user.pk))
+                | Q(customer__email__iexact=request.user.email.lower())
+            )
+            .distinct()
+            .order_by('-created_at')
+        )
+        return JsonResponse([o.to_frontend() for o in orders], safe=False)
 
     # POST — create an order. Price and totals are always recalculated server-side.
     data = _json_body(request)
