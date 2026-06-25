@@ -16,6 +16,7 @@ from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
 from django.urls import path, reverse
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
@@ -322,11 +323,7 @@ class ProductAdminForm(forms.ModelForm):
         self.fields['category'].widget = forms.Select(
             choices=[('', '— Select category —')] + [(c, c) for c in cats]
         )
-        self.fields['brand'].help_text = 'Add new brands under Brands; add categories under Categories.'
-        self.fields['slug'].help_text = (
-            'Auto-filled from the Name — this is the product’s web-address ID. '
-            'Leave it as generated unless you have a reason to change it.'
-        )
+        self.fields[‘brand’].help_text = ‘Add new brands under Brands; add categories under Categories.’
 
 
 @admin.register(Product, site=jalaram_admin)
@@ -339,39 +336,61 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'brand', 'badge')
     search_fields = ('name', 'brand', 'slug', 'details')
     list_editable = ('stock',)
-    readonly_fields = ('created_at', 'image_preview', 'video_preview')
-    prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ('created_at', 'slug', 'image_preview', 'video_preview')
+    prepopulated_fields = {}
     ordering = ('-created_at',)
     actions = ['clear_promo_codes', 'mark_featured']
 
     fieldsets = (
-        ('Product', {
-            'fields': ('slug', 'name', 'brand', 'category', 'details', 'badge', 'stock'),
+        ('Basic Info', {
+            'fields': ('name', 'brand', 'category', 'badge', 'stock'),
+        }),
+        ('Description', {
+            'fields': ('details',),
         }),
         ('Pricing', {
-            'fields': ('price', 'original_price', 'rating', 'rating_count'),
+            'fields': ('price', 'original_price'),
+            'description': 'Set original price only if there is a discount to show.',
         }),
-        ('Promo code', {
+        ('Ratings', {
+            'fields': ('rating', 'rating_count'),
+            'classes': ('collapse',),
+        }),
+        ('Promo Code', {
             'fields': ('promo_code', 'promo_discount'),
-            'description': 'Optional product-level promo (percentage off).',
+            'description': 'Optional percentage-off promo code applied at checkout.',
+            'classes': ('collapse',),
         }),
-        ('Images & media', {
+        ('Images', {
             'fields': (
-                'image_icon', 'image_preview',
-                'image1_file', 'image_url',
-                'image2_file', 'image_url2',
-                'image3_file', 'image_url3',
-                'image4_file', 'image_url4',
-                'images',
-                'video', 'video_preview', 'video_url',
+                'image_preview',
+                'image1_file', 'image2_file', 'image3_file', 'image4_file',
+                'image_icon',
             ),
-            'description': (
-                'Upload images directly (stored on Cloudinary when configured). '
-                'The URL field below each upload is a fallback — only used if no file is uploaded.'
-            ),
+            'description': 'Upload product images (JPG/PNG/WebP). First image is the main display image.',
         }),
-        ('Meta', {'fields': ('created_at',), 'classes': ('collapse',)}),
+        ('Video', {
+            'fields': ('video', 'video_preview', 'video_url'),
+            'description': 'Upload a product video (MP4/MOV/WebM) or paste an external link as fallback.',
+            'classes': ('collapse',),
+        }),
+        ('Advanced', {
+            'fields': ('slug', 'images', 'created_at'),
+            'classes': ('collapse',),
+            'description': 'Slug is auto-generated from the product name. Edit only if you need a custom URL.',
+        }),
     )
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            base = slugify(obj.name)[:90] or 'product'
+            candidate = base
+            n = 1
+            while Product.objects.filter(slug=candidate).exists():
+                candidate = f'{base}-{n}'
+                n += 1
+            obj.slug = candidate
+        super().save_model(request, obj, form, change)
 
     @admin.display(description='Price', ordering='price')
     def price_display(self, obj):
