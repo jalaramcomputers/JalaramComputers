@@ -314,3 +314,25 @@ class NewsletterSubscriber(models.Model):
 
     def __str__(self):
         return self.email
+
+
+class PageView(models.Model):
+    """One public storefront page visit. Written by PageViewMiddleware; read by
+    the dashboard analytics. `visitor_id` is an anonymous first-party id (cookie)
+    used to count unique visitors — no personal data is stored."""
+
+    path = models.CharField(max_length=300, db_index=True)
+    visitor_id = models.CharField(max_length=64, db_index=True)
+    session_key = models.CharField(max_length=64, blank=True, default='')
+    referrer = models.CharField(max_length=500, blank=True, default='')
+    user_agent = models.CharField(max_length=400, blank=True, default='')
+    is_authenticated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'site visit'
+        verbose_name_plural = 'site visits'
+
+    def __str__(self):
+        return f'{self.path} · {self.created_at:%Y-%m-%d %H:%M}'

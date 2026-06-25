@@ -7,55 +7,128 @@
 
 {% block content %}
 <div class="ja-dash">
-  {% with s=jalaram_stats %}
+  {% with s=jalaram_stats a=jalaram_analytics %}
   <p class="ja-dash__lead">{% translate 'Overview of your store at a glance.' %}</p>
-
-  <div class="ja-dash__stats">
-    <article class="ja-stat">
-      <strong>{{ s.products }}</strong>
-      <span>{% translate 'Products' %}</span>
-    </article>
-    <article class="ja-stat">
-      <strong>{{ s.orders }}</strong>
-      <span>{% translate 'Orders' %}</span>
-    </article>
-    <article class="ja-stat{% if s.orders_unpaid %} ja-stat--warn{% endif %}">
-      <strong>{{ s.orders_unpaid }}</strong>
-      <span>{% translate 'Unpaid orders' %}</span>
-    </article>
-    <article class="ja-stat">
-      <strong>₹{{ s.revenue|floatformat:0 }}</strong>
-      <span>{% translate 'Total revenue' %}</span>
-    </article>
-    <article class="ja-stat{% if s.queries_open %} ja-stat--warn{% endif %}">
-      <strong>{{ s.queries_open }}</strong>
-      <span>{% translate 'Open queries' %}</span>
-    </article>
-    <article class="ja-stat">
-      <strong>{{ s.bookings }}</strong>
-      <span>{% translate 'Service bookings' %}</span>
-    </article>
-    <article class="ja-stat">
-      <strong>{{ s.repairs_active }}</strong>
-      <span>{% translate 'Active repairs' %}</span>
-    </article>
-    <article class="ja-stat{% if s.low_stock %} ja-stat--err{% endif %}">
-      <strong>{{ s.low_stock }}</strong>
-      <span>{% translate 'Low stock (≤5)' %}</span>
-    </article>
-    <article class="ja-stat">
-      <strong>{{ s.subscribers }}</strong>
-      <span>{% translate 'Newsletter' %}</span>
-    </article>
-  </div>
 
   <div class="ja-dash__actions">
     <a href="{% url 'admin:shop_product_add' %}" class="ja-btn ja-btn--gold">+ {% translate 'Add product' %}</a>
-    <a href="{% url 'admin:shop_order_changelist' %}" class="ja-btn">{% translate 'View orders' %}</a>
-    <a href="{% url 'admin:shop_contactquery_changelist' %}" class="ja-btn">{% translate 'Contact queries' %}</a>
-    <a href="{% url 'admin:shop_servicebooking_changelist' %}" class="ja-btn">{% translate 'Service bookings' %}</a>
+    <a href="{% url 'admin:shop_brand_add' %}" class="ja-btn">+ {% translate 'Add brand' %}</a>
+    <a href="{% url 'admin:shop_order_changelist' %}" class="ja-btn">{% translate 'Orders' %}</a>
+    <a href="{% url 'admin:shop_servicebooking_changelist' %}" class="ja-btn">{% translate 'Bookings' %}</a>
+    <a href="{% url 'admin:shop_pageview_changelist' %}" class="ja-btn">{% translate 'Site visits' %}</a>
     <a href="{% url 'admin:jalaram_billing' %}" class="ja-btn ja-btn--gold-outline">{% translate 'GST billing' %}</a>
-    <a href="{% url 'admin:shop_sitesettings_change' 1 %}" class="ja-btn">{% translate 'Store settings' %}</a>
+    <a href="{% url 'admin:shop_sitesettings_change' 1 %}" class="ja-btn">{% translate 'Settings' %}</a>
+  </div>
+
+  {# ── Store stats ── #}
+  <h2 class="ja-dash__h">{% translate 'Store' %}</h2>
+  <div class="ja-dash__stats">
+    <article class="ja-stat"><strong>{{ s.products }}</strong><span>{% translate 'Products' %}</span></article>
+    <article class="ja-stat"><strong>{{ s.orders }}</strong><span>{% translate 'Orders' %}</span></article>
+    <article class="ja-stat{% if s.orders_unpaid %} ja-stat--warn{% endif %}"><strong>{{ s.orders_unpaid }}</strong><span>{% translate 'Unpaid orders' %}</span></article>
+    <article class="ja-stat"><strong>₹{{ s.revenue|floatformat:0 }}</strong><span>{% translate 'Total revenue' %}</span></article>
+    <article class="ja-stat{% if s.queries_open %} ja-stat--warn{% endif %}"><strong>{{ s.queries_open }}</strong><span>{% translate 'Open queries' %}</span></article>
+    <article class="ja-stat"><strong>{{ s.bookings }}</strong><span>{% translate 'Service bookings' %}</span></article>
+    <article class="ja-stat"><strong>{{ s.repairs_active }}</strong><span>{% translate 'Active repairs' %}</span></article>
+    <article class="ja-stat{% if s.low_stock %} ja-stat--err{% endif %}"><strong>{{ s.low_stock }}</strong><span>{% translate 'Low stock (≤5)' %}</span></article>
+    <article class="ja-stat"><strong>{{ s.subscribers }}</strong><span>{% translate 'Newsletter' %}</span></article>
+  </div>
+
+  {# ── Visitor analytics ── #}
+  <h2 class="ja-dash__h">{% translate 'Site analytics' %} <span class="ja-dash__h-note">{% translate 'last 30 days' %}</span></h2>
+  <div class="ja-dash__stats">
+    <article class="ja-stat ja-stat--accent"><strong>{{ a.today_visitors }}</strong><span>{% translate 'Visitors today' %}</span></article>
+    <article class="ja-stat"><strong>{{ a.today_views }}</strong><span>{% translate 'Page views today' %}</span></article>
+    <article class="ja-stat"><strong>{{ a.visitors_7d }}</strong><span>{% translate 'Visitors (7d)' %}</span></article>
+    <article class="ja-stat ja-stat--accent"><strong>{{ a.visitors_30d }}</strong><span>{% translate 'Unique visitors (30d)' %}</span></article>
+    <article class="ja-stat"><strong>{{ a.views_30d }}</strong><span>{% translate 'Page views (30d)' %}</span></article>
+    <article class="ja-stat"><strong>{{ a.conversion }}%</strong><span>{% translate 'Visit → order' %}</span></article>
+  </div>
+
+  <div class="ja-grid2">
+    <section class="ja-panel">
+      <div class="ja-panel__head">
+        <h3>{% translate 'Visits' %} <span>· {% translate 'last 14 days' %}</span></h3>
+        <span class="ja-panel__meta">{% translate 'peak' %} {{ a.chart.peak }}</span>
+      </div>
+      {% if a.total_views %}
+      <svg class="ja-chart" viewBox="0 0 {{ a.chart.width }} {{ a.chart.height }}" role="img" aria-label="{% translate 'Daily visits, last 14 days' %}">
+        <line x1="0" y1="{{ a.chart.baseline }}" x2="{{ a.chart.width }}" y2="{{ a.chart.baseline }}" class="ja-chart__axis"/>
+        {% for b in a.chart.bars %}
+          {% if b.h %}<rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="3" class="ja-chart__bar{% if b.is_today %} is-today{% endif %}"/>
+          <text x="{{ b.cx }}" y="{{ b.y }}" dy="-4" class="ja-chart__val">{{ b.count }}</text>{% endif %}
+          <text x="{{ b.cx }}" y="{{ a.chart.label_y }}" class="ja-chart__lbl{% if b.is_today %} is-today{% endif %}">{{ b.label }}</text>
+        {% endfor %}
+      </svg>
+      {% else %}
+      <p class="ja-empty">{% translate 'No visits recorded yet. Data appears here as people browse the storefront.' %}</p>
+      {% endif %}
+    </section>
+
+    <section class="ja-panel">
+      <div class="ja-panel__head"><h3>{% translate 'Top pages' %} <span>· {% translate '30 days' %}</span></h3></div>
+      {% if a.top_pages %}
+      <ul class="ja-bars">
+        {% for p in a.top_pages %}
+        <li class="ja-bars__row">
+          <span class="ja-bars__name" title="{{ p.path }}">{{ p.label }}</span>
+          <span class="ja-bars__track"><span class="ja-bars__fill" style="width:{{ p.pct }}%"></span></span>
+          <span class="ja-bars__num">{{ p.count }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="ja-empty">{% translate 'No page data yet.' %}</p>
+      {% endif %}
+    </section>
+  </div>
+
+  {# ── Recent orders + low stock ── #}
+  <div class="ja-grid2">
+    <section class="ja-panel">
+      <div class="ja-panel__head">
+        <h3>{% translate 'Recent orders' %}</h3>
+        <a href="{% url 'admin:shop_order_changelist' %}" class="ja-panel__link">{% translate 'View all' %} →</a>
+      </div>
+      {% if recent_orders %}
+      <table class="ja-mini">
+        <tbody>
+        {% for o in recent_orders %}
+        <tr>
+          <td><a href="{% url 'admin:shop_order_change' o.pk %}">{{ o.order_id }}</a></td>
+          <td class="ja-mini__sub">{{ o.customer.name|default:'—' }}</td>
+          <td>₹{{ o.total|floatformat:0 }}</td>
+          <td><span class="ja-tag">{{ o.status }}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ja-empty">{% translate 'No orders yet.' %}</p>
+      {% endif %}
+    </section>
+
+    <section class="ja-panel">
+      <div class="ja-panel__head">
+        <h3>{% translate 'Low stock' %} <span>· ≤5</span></h3>
+        <a href="{% url 'admin:shop_product_changelist' %}" class="ja-panel__link">{% translate 'All products' %} →</a>
+      </div>
+      {% if low_stock_products %}
+      <table class="ja-mini">
+        <tbody>
+        {% for p in low_stock_products %}
+        <tr>
+          <td><a href="{% url 'admin:shop_product_change' p.pk %}">{{ p.name|truncatechars:34 }}</a></td>
+          <td class="ja-mini__sub">{{ p.brand }}</td>
+          <td><span class="ja-tag{% if p.stock == 0 %} ja-tag--err{% else %} ja-tag--warn{% endif %}">{{ p.stock }} {% translate 'left' %}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="ja-empty">{% translate 'All products are well stocked. 🎉' %}</p>
+      {% endif %}
+    </section>
   </div>
   {% endwith %}
 </div>

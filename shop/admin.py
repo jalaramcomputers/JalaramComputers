@@ -4,15 +4,18 @@ Full store management via /admin: products, promos, orders, repairs,
 bookings, customers, queries, settings, hero slides, newsletter.
 Custom views: dashboard stats, order invoice, GST billing compiler.
 """
+from datetime import timedelta
 from decimal import Decimal
 
 from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
-from django.db.models import Sum
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
 from django.urls import path, reverse
+from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
@@ -23,6 +26,7 @@ from .models import (
     HeroSlideConfig,
     NewsletterSubscriber,
     Order,
+    PageView,
     Product,
     ServiceBooking,
     ServiceRequest,
@@ -97,6 +101,15 @@ class JalaramAdminSite(admin.AdminSite):
         ctx['jalaram_stats'] = dashboard_stats()
         return ctx
 
+    def index(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['jalaram_analytics'] = analytics_stats()
+        extra_context['recent_orders'] = list(Order.objects.all()[:6])
+        extra_context['low_stock_products'] = list(
+            Product.objects.filter(stock__lte=5).order_by('stock')[:6]
+        )
+        return super().index(request, extra_context=extra_context)
+
 
 jalaram_admin = JalaramAdminSite(name='jalaram_admin')
 
@@ -114,6 +127,89 @@ def dashboard_stats():
         'subscribers': NewsletterSubscriber.objects.count(),
         'low_stock': low_stock,
         'revenue': Order.objects.aggregate(t=Sum('total'))['t'] or 0,
+    }
+
+
+# ── Visitor analytics ───────────────────────────────────────────────────────
+
+PAGE_NAMES = {
+    '/': 'Home', '/shop': 'Shop', '/product': 'Product detail',
+    '/cart': 'Cart', '/checkout': 'Checkout', '/order-confirmed': 'Order confirmed',
+    '/services': 'Services', '/book-service': 'Book service',
+    '/about': 'About', '/contact': 'Contact', '/account': 'Account',
+}
+
+
+def _page_name(path):
+    return PAGE_NAMES.get(path, path)
+
+
+def analytics_stats(days=14):
+    """Aggregate PageView traffic for the dashboard: headline counts, a daily
+    series for the bar chart, top pages, and a visit→order conversion rate."""
+    today = timezone.localtime().date()
+    start = today - timedelta(days=days - 1)
+    d7 = today - timedelta(days=6)
+    d30 = today - timedelta(days=29)
+
+    all_views = PageView.objects.all()
+
+    def _uniq(qs):
+        return qs.values('visitor_id').distinct().count()
+
+    today_qs = all_views.filter(created_at__date=today)
+    views_7d_qs = all_views.filter(created_at__date__gte=d7)
+    views_30d_qs = all_views.filter(created_at__date__gte=d30)
+
+    # Daily counts for the chart (fill gaps with zero).
+    rows = (all_views.filter(created_at__date__gte=start)
+            .annotate(d=TruncDate('created_at'))
+            .values('d').annotate(c=Count('id')))
+    by_date = {r['d']: r['c'] for r in rows}
+    counts = [by_date.get(start + timedelta(days=i), 0) for i in range(days)]
+    peak = max(counts) or 1
+
+    plot_h, top_pad, bar_w, gap = 96, 12, 26, 14
+    step = bar_w + gap
+    baseline = top_pad + plot_h
+    bars = []
+    for i, c in enumerate(counts):
+        d = start + timedelta(days=i)
+        h = round(plot_h * c / peak) if c else 0
+        x = gap + i * step
+        bars.append({
+            'x': x, 'y': baseline - h, 'w': bar_w, 'h': h, 'count': c,
+            'cx': x + bar_w / 2, 'label': d.strftime('%d'), 'is_today': d == today,
+        })
+
+    top_rows = views_30d_qs.values('path').annotate(c=Count('id')).order_by('-c')[:6]
+    top_total = views_30d_qs.count() or 1
+    top_pages = [{
+        'path': r['path'], 'label': _page_name(r['path']),
+        'count': r['c'], 'pct': round(100 * r['c'] / top_total),
+    } for r in top_rows]
+
+    visitors_30d = _uniq(views_30d_qs)
+    orders_30d = Order.objects.filter(created_at__date__gte=d30).count()
+    conversion = round(100 * orders_30d / visitors_30d, 1) if visitors_30d else 0
+
+    return {
+        'today_views': today_qs.count(),
+        'today_visitors': _uniq(today_qs),
+        'views_7d': views_7d_qs.count(),
+        'visitors_7d': _uniq(views_7d_qs),
+        'views_30d': views_30d_qs.count(),
+        'visitors_30d': visitors_30d,
+        'total_views': all_views.count(),
+        'total_visitors': _uniq(all_views),
+        'orders_30d': orders_30d,
+        'conversion': conversion,
+        'top_pages': top_pages,
+        'days': days,
+        'chart': {
+            'width': days * step + gap, 'height': baseline + 22,
+            'baseline': baseline, 'label_y': baseline + 16, 'peak': peak, 'bars': bars,
+        },
     }
 
 
@@ -667,10 +763,43 @@ class NewsletterSubscriberAdmin(admin.ModelAdmin):
     ordering = ('-subscribed_at',)
 
 
+# ── Site visits (read-only analytics log) ────────────────────────────────────
+
+@admin.register(PageView, site=jalaram_admin)
+class PageViewAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'page', 'visitor_short', 'visitor_type', 'referrer_short')
+    list_filter = ('is_authenticated', 'created_at')
+    search_fields = ('path', 'visitor_id', 'referrer')
+    date_hierarchy = 'created_at'
+    ordering = ('-created_at',)
+
+    @admin.display(description='Page', ordering='path')
+    def page(self, obj):
+        return _page_name(obj.path)
+
+    @admin.display(description='Visitor')
+    def visitor_short(self, obj):
+        return obj.visitor_id[:8]
+
+    @admin.display(description='Type')
+    def visitor_type(self, obj):
+        return 'Logged in' if obj.is_authenticated else 'Guest'
+
+    @admin.display(description='Came from')
+    def referrer_short(self, obj):
+        return (obj.referrer or '—')[:60]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 # Keep default admin site clean — all store models live on jalaram_admin.
 for _model in (
     Brand, Category, Product, ProductPromo, Order, ServiceRequest, ServiceBooking,
-    ContactQuery, SiteSettings, HeroSlideConfig, NewsletterSubscriber, User,
+    ContactQuery, SiteSettings, HeroSlideConfig, NewsletterSubscriber, PageView, User,
 ):
     if admin.site.is_registered(_model):
         admin.site.unregister(_model)

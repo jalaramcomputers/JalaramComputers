@@ -661,3 +661,83 @@ input[type="checkbox"] {
   stroke-linecap: round; stroke-linejoin: round;
   margin-right: 0.45rem;
 }
+
+/* ── Dashboard: section headings, analytics, panels ── */
+.ja-dash__h {
+  font-family: var(--serif); font-size: 1.05rem; font-weight: 600;
+  color: var(--text); margin: 1.75rem 0 0.85rem;
+  display: flex; align-items: baseline; gap: 0.5rem;
+}
+.ja-dash__h:first-of-type { margin-top: 1.25rem; }
+.ja-dash__h-note {
+  font-family: var(--sans); font-size: 0.6875rem; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3);
+}
+.ja-stat--accent { border-color: var(--gold-line); background: var(--gold-soft); }
+.ja-stat--accent strong { color: var(--gold); }
+
+.ja-grid2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;
+}
+.ja-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 1.1rem 1.2rem;
+}
+.ja-panel__head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem; margin-bottom: 0.9rem;
+}
+.ja-panel__head h3 {
+  margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text);
+  font-family: var(--sans);
+}
+.ja-panel__head h3 span { color: var(--text-3); font-weight: 500; font-size: 0.75rem; }
+.ja-panel__meta {
+  font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.ja-panel__link { font-size: 0.75rem; color: var(--gold) !important; text-decoration: none; white-space: nowrap; }
+.ja-panel__link:hover { color: var(--gold-hover) !important; }
+
+/* Visits bar chart */
+.ja-chart { width: 100%; height: auto; display: block; }
+.ja-chart__axis { stroke: var(--border); stroke-width: 1; }
+.ja-chart__bar { fill: rgba(212, 175, 55, 0.4); transition: fill 0.15s; }
+.ja-chart__bar.is-today { fill: var(--gold); }
+.ja-chart:hover .ja-chart__bar { fill: rgba(212, 175, 55, 0.6); }
+.ja-chart__val, .ja-chart__lbl {
+  font-family: var(--sans); font-size: 9px; text-anchor: middle; fill: var(--text-3);
+}
+.ja-chart__lbl.is-today { fill: var(--gold); font-weight: 700; }
+
+/* Top-pages horizontal bars */
+.ja-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.ja-bars__row { display: grid; grid-template-columns: 7.5rem 1fr 2.25rem; align-items: center; gap: 0.6rem; }
+.ja-bars__name {
+  font-size: 0.78rem; color: var(--text); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.ja-bars__track { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.ja-bars__fill { display: block; height: 100%; background: var(--gold); border-radius: 999px; min-width: 3px; }
+.ja-bars__num { font-size: 0.78rem; font-weight: 700; color: var(--text-2); text-align: right; }
+
+/* Mini tables (recent orders / low stock) */
+.ja-mini { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.ja-mini td { padding: 0.5rem 0.4rem; border-top: 1px solid var(--border); }
+.ja-mini tr:first-child td { border-top: none; }
+.ja-mini a { color: var(--text) !important; text-decoration: none; font-weight: 600; }
+.ja-mini a:hover { color: var(--gold) !important; }
+.ja-mini__sub { color: var(--text-2); }
+.ja-tag {
+  display: inline-block; padding: 0.12rem 0.55rem; border-radius: 999px;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.03em;
+  background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border);
+}
+.ja-tag--warn { background: rgba(251, 191, 36, 0.12); color: var(--warn); border-color: rgba(251, 191, 36, 0.3); }
+.ja-tag--err { background: rgba(248, 113, 113, 0.12); color: var(--danger); border-color: rgba(248, 113, 113, 0.3); }
+.ja-empty { color: var(--text-3); font-size: 0.82rem; padding: 0.5rem 0; margin: 0; }
+
+@media (max-width: 860px) {
+  .ja-grid2 { grid-template-columns: 1fr; }
+}
