@@ -1,5 +1,8 @@
 from django.conf import settings
+from django.core.validators import FileExtensionValidator
 from django.db import models
+
+from .storage import select_video_storage
 
 # Status option lists. Defined here (not in admin.py) so the model fields can use
 # them as `choices=` — which is what turns a plain text box into a dropdown both
@@ -66,7 +69,18 @@ class Product(models.Model):
     image_url3 = models.URLField(max_length=500, blank=True, default='')
     image_url4 = models.URLField(max_length=500, blank=True, default='')
     images = models.JSONField(default=list, blank=True)
-    video_url = models.URLField(max_length=500, blank=True, default='')
+    video = models.FileField(
+        upload_to='product_videos/',
+        storage=select_video_storage,
+        validators=[FileExtensionValidator(['mp4', 'mov', 'webm', 'ogg', 'm4v'])],
+        blank=True,
+        default='',
+        help_text='Upload a product video (MP4/MOV/WebM). Stored on Cloudinary when configured.',
+    )
+    video_url = models.URLField(
+        max_length=500, blank=True, default='',
+        help_text='Optional: external video link (used only if no file is uploaded above).',
+    )
     image_icon = models.CharField(max_length=100, blank=True, default='lucide:box')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -75,6 +89,17 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def video_src(self):
+        """Delivery URL for the product video — uploaded file first, else the
+        external link."""
+        if self.video:
+            try:
+                return self.video.url
+            except Exception:
+                return self.video_url
+        return self.video_url
 
     def to_frontend(self):
         return {
@@ -96,7 +121,7 @@ class Product(models.Model):
             'imageUrl3': self.image_url3,
             'imageUrl4': self.image_url4,
             'images': self.images or [],
-            'videoUrl': self.video_url,
+            'videoUrl': self.video_src,
             'imageIcon': self.image_icon,
             'createdAt': int(self.created_at.timestamp() * 1000),
         }

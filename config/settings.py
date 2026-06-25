@@ -60,6 +60,15 @@ INSTALLED_APPS = [
     'shop',
 ]
 
+# Cloudinary (used only for the Product video upload field). Registered only
+# when the packages are installed so a missing dependency never crashes boot.
+try:
+    import cloudinary  # noqa: F401
+    import cloudinary_storage  # noqa: F401
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+except Exception:
+    pass
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -144,6 +153,19 @@ USE_TZ = True
 STATIC_URL = '/assets/'
 STATICFILES_DIRS = [BASE_DIR / 'public' / 'assets']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Uploaded media (product videos). On Cloudinary, file URLs are absolute and
+# served by Cloudinary; MEDIA_ROOT/_URL are only used by the local fallback.
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cloudinary credentials. Set either CLOUDINARY_URL (one value, recommended) or
+# the three CLOUDINARY_* vars. When none are set, uploads fall back to local disk.
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
 
 # WhiteNoise serves collected static files in production (DEBUG=False).
 # Compressed (not manifest) storage so the hard-coded /assets/ URLs keep working.

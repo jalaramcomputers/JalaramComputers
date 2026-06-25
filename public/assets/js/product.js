@@ -85,6 +85,10 @@ function render(p, all) {
 
     ${p.details ? `<div class="jc-product__overview"><h2>Product <em style="color:var(--navy);font-style:italic">Overview</em></h2><p>${esc(p.details)}</p></div>` : ''}
 
+    ${p.videoUrl ? `<div class="jc-product__overview"><h2>Product <em style="color:var(--navy);font-style:italic">Video</em></h2>
+      <video controls preload="metadata" playsinline src="${esc(p.videoUrl)}"
+        style="width:100%;max-width:880px;margin-top:1rem;border-radius:14px;background:#000;display:block"></video></div>` : ''}
+
     <div class="jc-recommended">
       <div class="jc-head"><div><span class="jc-kicker">Complementary Gear</span><h2 class="jc-title">You Might <em>Also Like</em></h2></div>
         <a href="/shop" class="jc-link">Explore Collection <iconify-icon icon="lucide:arrow-right"></iconify-icon></a></div>

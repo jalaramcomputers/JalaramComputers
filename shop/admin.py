@@ -339,7 +339,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'brand', 'badge')
     search_fields = ('name', 'brand', 'slug', 'details')
     list_editable = ('stock',)
-    readonly_fields = ('created_at', 'image_preview')
+    readonly_fields = ('created_at', 'image_preview', 'video_preview')
     prepopulated_fields = {'slug': ('name',)}
     ordering = ('-created_at',)
     actions = ['clear_promo_codes', 'mark_featured']
@@ -359,8 +359,10 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': (
                 'image_icon', 'image_preview',
                 'image_url', 'image_url2', 'image_url3', 'image_url4',
-                'images', 'video_url',
+                'images',
+                'video', 'video_preview', 'video_url',
             ),
+            'description': 'Upload a product video, or paste an external video link below it.',
         }),
         ('Meta', {'fields': ('created_at',), 'classes': ('collapse',)}),
     )
@@ -392,6 +394,17 @@ class ProductAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" style="max-height:80px;border-radius:4px;">', obj.image_url)
         if obj.image_icon:
             return obj.image_icon
+        return '—'
+
+    @admin.display(description='Video preview')
+    def video_preview(self, obj):
+        src = obj.video_src
+        if src:
+            return format_html(
+                '<video src="{}" controls preload="metadata" '
+                'style="max-height:170px;border-radius:6px;background:#000;"></video>',
+                src,
+            )
         return '—'
 
     @admin.action(description='Clear promo codes on selected products')
