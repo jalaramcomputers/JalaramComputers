@@ -7,3 +7,4 @@ gunicorn>=22.0
 google-auth>=2.29
 cloudinary>=1.40
 django-cloudinary-storage>=0.3
+openpyxl>=3.1

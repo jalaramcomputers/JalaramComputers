@@ -1,0 +1,165 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'jalaram_admin:index' %}">Home</a>
+  &rsaquo; <a href="{% url 'jalaram_admin:shop_product_changelist' %}">Products</a>
+  &rsaquo; Bulk Upload
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .bu-page { max-width: 860px; }
+  .bu-card { background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:1.5rem; margin-bottom:1.5rem; }
+  .bu-card h2 { margin:0 0 .75rem; font-size:1rem; font-weight:700; color:#1B3A5C; }
+  .bu-steps { padding-left:1.2rem; margin:0 0 1rem; color:#374151; line-height:1.8; }
+  .bu-dl { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; background:#1B3A5C;
+           color:#fff; border-radius:6px; font-size:.85rem; font-weight:600; text-decoration:none; }
+  .bu-dl:hover { background:#162f4d; }
+  .bu-col-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+  .bu-col-table th { background:#f1f5f9; padding:.45rem .75rem; text-align:left; font-weight:700;
+                     border-bottom:2px solid #e2e8f0; color:#374151; }
+  .bu-col-table td { padding:.4rem .75rem; border-bottom:1px solid #f1f5f9; color:#4b5563; vertical-align:top; }
+  .bu-col-table tr:last-child td { border-bottom:none; }
+  .bu-req { display:inline-block; padding:1px 6px; border-radius:4px; font-size:.72rem; font-weight:700;
+            background:#fee2e2; color:#b91c1c; }
+  .bu-opt { display:inline-block; padding:1px 6px; border-radius:4px; font-size:.72rem; font-weight:700;
+            background:#f1f5f9; color:#64748b; }
+  .bu-upload-row { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+  .bu-file { flex:1; min-width:220px; padding:.5rem .75rem; border:1px solid #cbd5e1;
+             border-radius:6px; font-size:.9rem; background:#f8fafc; }
+  .bu-submit { padding:.55rem 1.4rem; background:#1B3A5C; color:#fff; border:none; border-radius:6px;
+               font-weight:700; font-size:.9rem; cursor:pointer; }
+  .bu-submit:hover { background:#162f4d; }
+  .bu-result-ok  { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; }
+  .bu-result-err { background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; }
+  .bu-result-warn{ background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; }
+  .bu-count { font-size:1.5rem; font-weight:800; }
+  .bu-count-ok  { color:#16a34a; }
+  .bu-count-err { color:#dc2626; }
+  .bu-count-warn{ color:#d97706; }
+  .bu-mini { width:100%; border-collapse:collapse; font-size:.81rem; margin-top:.75rem; }
+  .bu-mini th { background:#f8fafc; padding:.35rem .6rem; text-align:left; font-weight:600; border-bottom:1px solid #e2e8f0; }
+  .bu-mini td { padding:.35rem .6rem; border-bottom:1px solid #f8fafc; }
+  .bu-mini tr:last-child td { border-bottom:none; }
+  .bu-error-msg { color:#dc2626; font-weight:600; }
+  .bu-tip { font-size:.8rem; color:#64748b; margin-top:.5rem; }
+</style>
+
+<div class="bu-page">
+
+  {% if results %}
+    {% if results.error %}
+      <div class="bu-result-err">
+        <div class="bu-count bu-count-err">Upload failed</div>
+        <p style="margin:.4rem 0 0">{{ results.error }}</p>
+      </div>
+    {% else %}
+      <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <div class="bu-result-ok" style="flex:1;min-width:180px">
+          <div class="bu-count bu-count-ok">{{ results.created|length }}</div>
+          <div>product{{ results.created|length|pluralize }} imported</div>
+        </div>
+        {% if results.skipped %}
+        <div class="bu-result-warn" style="flex:1;min-width:180px">
+          <div class="bu-count bu-count-warn">{{ results.skipped|length }}</div>
+          <div>row{{ results.skipped|length|pluralize }} skipped</div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if results.created %}
+      <div class="bu-card">
+        <h2>Imported ({{ results.created|length }})</h2>
+        <table class="bu-mini">
+          <thead><tr><th>Row</th><th>Name</th><th>Slug</th></tr></thead>
+          <tbody>
+            {% for r in results.created %}
+            <tr>
+              <td>{{ r.row }}</td>
+              <td><strong>{{ r.name }}</strong></td>
+              <td style="color:#64748b;font-family:monospace">{{ r.slug }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      {% if results.skipped %}
+      <div class="bu-card">
+        <h2>Skipped rows ({{ results.skipped|length }})</h2>
+        <table class="bu-mini">
+          <thead><tr><th>Row</th><th>Name</th><th>Reason</th></tr></thead>
+          <tbody>
+            {% for r in results.skipped %}
+            <tr>
+              <td>{{ r.row }}</td>
+              <td>{{ r.name }}</td>
+              <td class="bu-error-msg">{{ r.reason }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+
+  <!-- Instructions -->
+  <div class="bu-card">
+    <h2>How to bulk upload products</h2>
+    <ol class="bu-steps">
+      <li>Download the Excel template below — it has the right columns and an example row.</li>
+      <li>Fill in one product per row. <strong>name</strong> and <strong>price</strong> are required; everything else is optional.</li>
+      <li>Save the file as <strong>.xlsx</strong> and upload it here.</li>
+      <li>Slugs are auto-generated from the product name — you don't need to set them.</li>
+    </ol>
+    <a href="?template=1" class="bu-dl">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Download Excel Template
+    </a>
+  </div>
+
+  <!-- Upload form -->
+  <div class="bu-card">
+    <h2>Upload your filled file</h2>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="bu-upload-row">
+        <input type="file" name="excel_file" accept=".xlsx,.xlsm" class="bu-file" required>
+        <button type="submit" class="bu-submit">Import Products</button>
+      </div>
+      <p class="bu-tip">Accepted formats: .xlsx, .xlsm &nbsp;·&nbsp; Existing products are never overwritten &nbsp;·&nbsp; Duplicate names get a numeric suffix on the slug</p>
+    </form>
+  </div>
+
+  <!-- Column reference -->
+  <div class="bu-card">
+    <h2>Column reference</h2>
+    <table class="bu-col-table">
+      <thead>
+        <tr>
+          <th>Column name</th>
+          <th></th>
+          <th>Example</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for col_name, required, example, notes in columns %}
+        <tr>
+          <td><code>{{ col_name }}</code></td>
+          <td>{% if required %}<span class="bu-req">required</span>{% else %}<span class="bu-opt">optional</span>{% endif %}</td>
+          <td style="color:#374151">{% if example %}{{ example }}{% else %}<span style="color:#cbd5e1">—</span>{% endif %}</td>
+          <td>{{ notes }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

@@ -326,9 +326,29 @@ class ProductAdminForm(forms.ModelForm):
         self.fields[‘brand’].help_text = ‘Add new brands under Brands; add categories under Categories.’
 
 
+_BULK_COLUMNS = [
+    ('name',           True,  'Dell XPS 15 Laptop',                          'Product display name'),
+    ('brand',          False, 'Dell',                                         'Must match a brand in your Brands list'),
+    ('category',       False, 'Laptops',                                      'Must match a category in your Categories list'),
+    ('price',          True,  89999,                                          'Selling price in ₹ (numbers only)'),
+    ('original_price', False, 99999,                                          'MRP — shows as strikethrough if higher than price'),
+    ('stock',          False, 10,                                             'Quantity in stock (default 0)'),
+    ('badge',          False, 'Featured',                                     'Label shown on the product card'),
+    ('details',        False, 'Processor:Intel i7|RAM:16GB|Storage:512GB',   'Pipe or comma-separated spec pairs'),
+    ('promo_code',     False, 'SAVE10',                                       'Leave blank for no promo'),
+    ('promo_discount', False, 10,                                             'Percentage off 0–100 (integer)'),
+    ('image_url',      False, '',                                             'Primary image URL'),
+    ('image_url2',     False, '',                                             'Gallery image 2'),
+    ('image_url3',     False, '',                                             'Gallery image 3'),
+    ('image_url4',     False, '',                                             'Gallery image 4'),
+    ('video_url',      False, '',                                             'Product video URL'),
+]
+
+
 @admin.register(Product, site=jalaram_admin)
 class ProductAdmin(admin.ModelAdmin):
     form = ProductAdminForm
+    change_list_template = 'admin/product_changelist.html'
     list_display = (
         'name', 'brand', 'category', 'price_display', 'stock', 'stock_level',
         'promo_display', 'badge', 'created_at',
@@ -391,6 +411,155 @@ class ProductAdmin(admin.ModelAdmin):
                 n += 1
             obj.slug = candidate
         super().save_model(request, obj, form, change)
+
+    # ── Bulk upload ────────────────────────────────────────────────────────
+
+    def get_urls(self):
+        return [
+            path(
+                'bulk-upload/',
+                self.admin_site.admin_view(self.bulk_upload_view),
+                name='shop_product_bulk_upload',
+            ),
+        ] + super().get_urls()
+
+    def bulk_upload_view(self, request):
+        if 'template' in request.GET:
+            return self._download_template()
+
+        results = None
+        if request.method == 'POST':
+            results = self._process_excel(request)
+
+        ctx = {
+            **self.admin_site.each_context(request),
+            'title': 'Bulk Upload Products',
+            'opts': self.model._meta,
+            'columns': _BULK_COLUMNS,
+            'results': results,
+        }
+        return render(request, 'admin/product_bulk_upload.html', ctx)
+
+    def _download_template(self):
+        import io
+        import openpyxl
+        from django.http import HttpResponse
+        from openpyxl.styles import Alignment, Font, PatternFill
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Products'
+        ws.append([col[0] for col in _BULK_COLUMNS])
+        ws.append([col[2] for col in _BULK_COLUMNS])
+
+        for cell in ws[1]:
+            cell.font = Font(bold=True, color='FFFFFF')
+            cell.fill = PatternFill(start_color='1B3A5C', end_color='1B3A5C', fill_type='solid')
+            cell.alignment = Alignment(horizontal='center')
+
+        for col_cells in ws.columns:
+            width = max(len(str(c.value or '')) for c in col_cells)
+            ws.column_dimensions[col_cells[0].column_letter].width = max(width + 4, 14)
+
+        buf = io.BytesIO()
+        wb.save(buf)
+        resp = HttpResponse(
+            buf.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        resp['Content-Disposition'] = 'attachment; filename="product_upload_template.xlsx"'
+        return resp
+
+    def _process_excel(self, request):
+        import openpyxl
+
+        f = request.FILES.get('excel_file')
+        if not f:
+            return {'error': 'No file selected.'}
+        if not f.name.lower().endswith(('.xlsx', '.xlsm')):
+            return {'error': 'Please upload an .xlsx file. Download the template to see the correct format.'}
+
+        try:
+            wb = openpyxl.load_workbook(f, read_only=True, data_only=True)
+            rows = list(wb.active.iter_rows(values_only=True))
+        except Exception as exc:
+            return {'error': f'Could not read the file: {exc}'}
+
+        if len(rows) < 2:
+            return {'error': 'No data rows found. Fill in at least one product row below the header.'}
+
+        headers = [str(h).strip().lower().replace(' ', '_') if h else '' for h in rows[0]]
+        missing = {'name', 'price'} - set(headers)
+        if missing:
+            return {'error': f'Missing required column(s): {", ".join(sorted(missing))}. Download the template.'}
+
+        created, skipped = [], []
+
+        for row_num, row_vals in enumerate(rows[1:], start=2):
+            if all(v is None or str(v).strip() == '' for v in row_vals):
+                continue  # blank trailing row
+
+            data = {h: v for h, v in zip(headers, row_vals)}
+            name = str(data.get('name') or '').strip()
+
+            if not name:
+                skipped.append({'row': row_num, 'name': '—', 'reason': 'Name is empty'})
+                continue
+
+            try:
+                price = Decimal(str(data.get('price') or 0))
+            except Exception:
+                skipped.append({'row': row_num, 'name': name, 'reason': f'Invalid price: {data.get("price")!r}'})
+                continue
+
+            def _dec(key):
+                v = data.get(key)
+                try:
+                    return Decimal(str(v)) if v not in (None, '') else None
+                except Exception:
+                    return None
+
+            def _int(key, default=0):
+                v = data.get(key)
+                try:
+                    return int(float(str(v))) if v not in (None, '') else default
+                except Exception:
+                    return default
+
+            def _str(key):
+                return str(data.get(key) or '').strip()
+
+            base = slugify(name)[:90] or 'product'
+            slug = base
+            n = 1
+            while Product.objects.filter(slug=slug).exists():
+                slug = f'{base}-{n}'
+                n += 1
+
+            try:
+                Product.objects.create(
+                    slug=slug,
+                    name=name,
+                    brand=_str('brand'),
+                    category=_str('category'),
+                    price=price,
+                    original_price=_dec('original_price'),
+                    stock=_int('stock'),
+                    badge=_str('badge'),
+                    details=_str('details'),
+                    promo_code=_str('promo_code'),
+                    promo_discount=_int('promo_discount'),
+                    image_url=_str('image_url'),
+                    image_url2=_str('image_url2'),
+                    image_url3=_str('image_url3'),
+                    image_url4=_str('image_url4'),
+                    video_url=_str('video_url'),
+                )
+                created.append({'row': row_num, 'name': name, 'slug': slug})
+            except Exception as exc:
+                skipped.append({'row': row_num, 'name': name, 'reason': str(exc)})
+
+        return {'created': created, 'skipped': skipped}
 
     @admin.display(description='Price', ordering='price')
     def price_display(self, obj):
