@@ -3,6 +3,8 @@
 
 {% block title %}{% if cl.formset and cl.formset.errors %}{% translate "Error:" %} {% endif %}{{ block.super }}{% endblock %}
 
+{% block ja_page_title %}{{ cl.opts.verbose_name_plural|capfirst }}{% endblock %}
+
 {% block extrastyle %}
 {{ block.super }}
 {{ media.css }}

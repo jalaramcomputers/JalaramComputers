@@ -1,17 +1,26 @@
 {% load i18n static %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE|default:'en-in' }}">
+<html lang="{{ LANGUAGE_CODE|default:'en-in' }}" data-theme="light">
 <head>
   <meta charset="utf-8">
   <title>{% block title %}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="NONE,NOARCHIVE">
+  <script>
+    /* Apply saved theme before paint to avoid a flash of the wrong theme. */
+    (function () {
+      try {
+        var t = localStorage.getItem('ja-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
   {% block stylesheet %}{% endblock %}
   {% block dark-mode-vars %}{% endblock %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/jalaram-admin.css' %}?v=2">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/jalaram-admin.css' %}?v=6">
   {% block extrastyle %}{% endblock %}
   {% block extrahead %}{% endblock %}
   {% block responsive %}{% endblock %}
@@ -21,32 +30,6 @@
 <a href="#ja-main" class="ja-skip">{% translate 'Skip to main content' %}</a>
 
 {% if not is_popup %}
-{% block header %}
-<header class="ja-topbar">
-  <div class="ja-topbar__inner">
-    <a href="{% url 'admin:index' %}" class="ja-brand">
-      <span class="ja-brand__mark">JC</span>
-      <span class="ja-brand__text">{{ site_header|default:'Jalaram Computers' }}</span>
-    </a>
-    {% block usertools %}
-    {% if has_permission %}
-    <div class="ja-usertools">
-      <span class="ja-usertools__hello">{% translate 'Welcome,' %} <strong>{% firstof user.get_short_name user.get_username %}</strong></span>
-      {% block userlinks %}
-      {% if site_url %}<a href="{{ site_url }}" target="_blank" rel="noopener">{% translate 'View site' %}</a>{% endif %}
-      {% if user.has_usable_password %}<a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a>{% endif %}
-      <form method="post" action="{% url 'admin:logout' %}" class="ja-logout">
-        {% csrf_token %}
-        <button type="submit">{% translate 'Log out' %}</button>
-      </form>
-      {% endblock %}
-    </div>
-    {% endif %}
-    {% endblock %}
-  </div>
-</header>
-{% endblock %}
-
 <div class="ja-shell{% if not has_permission %} ja-shell--auth{% endif %}">
   {% if has_permission %}
   {% block nav-sidebar %}
@@ -55,6 +38,53 @@
   {% endif %}
 
   <div class="ja-main-wrap">
+    {% block header %}
+    {% if has_permission %}
+    <header class="ja-topbar">
+      <h1 class="ja-topbar__title">{% block ja_page_title %}{% firstof subtitle title _('Dashboard') %}{% endblock %}</h1>
+      {% block usertools %}
+      <div class="ja-topbar__tools">
+        <span class="ja-topbar__clock" id="ja-clock" aria-live="off"></span>
+        <button type="button" class="ja-topbar__tool" data-ja-theme-toggle aria-label="{% translate 'Toggle dark mode' %}">
+          <svg class="ja-ico ja-ico--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          <svg class="ja-ico ja-ico--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <span class="ja-theme-label">{% translate 'Dark' %}</span>
+        </button>
+        {% if site_url %}
+        <a href="{{ site_url }}" target="_blank" rel="noopener" class="ja-topbar__tool ja-topbar__tool--accent">
+          <svg class="ja-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+          <span>{% translate 'View Store' %}</span>
+        </a>
+        {% endif %}
+        <form method="post" action="{% url 'admin:logout' %}" class="ja-logout">
+          {% csrf_token %}
+          <button type="submit" class="ja-topbar__tool ja-topbar__tool--danger">
+            <svg class="ja-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            <span>{% translate 'Log Out' %}</span>
+          </button>
+        </form>
+      </div>
+      {% endblock %}
+    </header>
+    {% endif %}
+    {% endblock header %}
+
+    {% block ja_banners %}
+    {% if has_permission and jalaram_stats.low_stock %}
+    <div class="ja-banners">
+      {% if jalaram_stats.low_stock %}
+      <div class="ja-banner ja-banner--warn">
+        <p>
+          <svg class="ja-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          {% blocktranslate count counter=jalaram_stats.low_stock %}{{ counter }} product is running low on stock.{% plural %}Some products are running low on stock.{% endblocktranslate %}
+        </p>
+        <a href="{% url 'admin:shop_product_changelist' %}" class="ja-banner__link">{% translate 'Review Stock' %}</a>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endblock ja_banners %}
+
     {% block nav-breadcrumbs %}
     {% block breadcrumbs %}{% endblock %}
     {% endblock %}
@@ -73,7 +103,7 @@
   {% endblock messages %}
 
   {% block pretitle %}{% endblock %}
-  {% block content_title %}{% if title %}<h1 class="ja-page-title">{{ title }}</h1>{% endif %}{% endblock %}
+  {% block content_title %}{% endblock %}
   {% block content_subtitle %}{% if subtitle %}<p class="ja-page-sub">{{ subtitle }}</p>{% endif %}{% endblock %}
 
   <div class="ja-page{% block coltype %}{% endblock %}">
@@ -96,5 +126,6 @@
 {% endif %}
 
 {% block footer %}{% endblock %}
+{% if not is_popup %}<script src="{% static 'js/jalaram-admin.js' %}?v=4" defer></script>{% endif %}
 </body>
 </html>

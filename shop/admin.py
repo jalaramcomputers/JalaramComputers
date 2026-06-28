@@ -323,7 +323,7 @@ class ProductAdminForm(forms.ModelForm):
         self.fields['category'].widget = forms.Select(
             choices=[('', '— Select category —')] + [(c, c) for c in cats]
         )
-        self.fields[‘brand’].help_text = ‘Add new brands under Brands; add categories under Categories.’
+        self.fields['brand'].help_text = 'Add new brands under Brands; add categories under Categories.'
 
 
 _BULK_COLUMNS = [

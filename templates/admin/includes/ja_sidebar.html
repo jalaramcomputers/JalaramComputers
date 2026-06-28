@@ -1,32 +1,78 @@
-{% load i18n %}
+{% load i18n static %}
+{% url 'admin:index' as url_dash %}
+{% url 'admin:shop_product_changelist' as url_products %}
+{% url 'admin:shop_productpromo_changelist' as url_promos %}
+{% url 'admin:shop_order_changelist' as url_orders %}
+{% url 'admin:shop_servicerequest_changelist' as url_repairs %}
+{% url 'admin:auth_user_changelist' as url_customers %}
+{% url 'admin:jalaram_billing' as url_billing %}
+{% url 'admin:shop_sitesettings_changelist' as url_settings %}
+{% url 'admin:shop_brand_changelist' as url_brands %}
+{% url 'admin:shop_category_changelist' as url_categories %}
+{% url 'admin:shop_servicebooking_changelist' as url_bookings %}
+{% url 'admin:shop_contactquery_changelist' as url_queries %}
+{% url 'admin:shop_heroslideconfig_changelist' as url_hero %}
+{% url 'admin:shop_newslettersubscriber_changelist' as url_newsletter %}
+{% url 'admin:shop_pageview_changelist' as url_visits %}
 <aside class="ja-sidebar" aria-label="{% translate 'Admin navigation' %}">
-  <nav class="ja-nav">
-    <a href="{% url 'admin:index' %}" class="ja-nav__item{% if request.path == '/admin/' %} is-active{% endif %}">
-      <span class="ja-nav__icon" aria-hidden="true">◈</span>
-      {% translate 'Dashboard' %}
+  <a href="{{ url_dash }}" class="ja-side-brand">
+    <span class="ja-side-brand__mark">
+      <img src="{% static 'images/logo-white-bg.png' %}" alt="" width="40" height="40">
+    </span>
+    <span class="ja-side-brand__txt">
+      <strong>Jalaram<br>Computers</strong>
+      <small>{% translate 'Admin Panel' %}</small>
+    </span>
+  </a>
+
+  <nav class="ja-nav" aria-label="{% translate 'Sections' %}">
+    <a href="{{ url_dash }}" class="ja-nav__item{% if request.path == url_dash %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      <span>{% translate 'Dashboard' %}</span>
     </a>
-    <a href="{% url 'admin:jalaram_billing' %}" class="ja-nav__item{% if '/admin/billing/' in request.path %} is-active{% endif %}">
-      <span class="ja-nav__icon" aria-hidden="true">₹</span>
-      {% translate 'GST billing' %}
+    <a href="{{ url_products }}" class="ja-nav__item{% if url_products and url_products in request.path %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+      <span>{% translate 'Products' %}</span>
     </a>
-    <a href="/" class="ja-nav__item ja-nav__item--muted" target="_blank" rel="noopener">
-      <span class="ja-nav__icon" aria-hidden="true">↗</span>
-      {% translate 'Storefront' %}
+    <a href="{{ url_promos }}" class="ja-nav__item{% if url_promos and url_promos in request.path %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="m9 9 6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
+      <span>{% translate 'Promo Codes' %}</span>
+    </a>
+    <a href="{{ url_orders }}" class="ja-nav__item{% if url_orders and url_orders in request.path %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span>{% translate 'Orders' %}</span>
+    </a>
+    <a href="{{ url_repairs }}" class="ja-nav__item{% if url_repairs and url_repairs in request.path %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span>{% translate 'Repairs' %}</span>
+    </a>
+    <a href="{{ url_customers }}" class="ja-nav__item{% if url_customers and url_customers in request.path %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>{% translate 'Customers' %}</span>
+    </a>
+    <a href="{{ url_billing }}" class="ja-nav__item{% if url_billing and url_billing in request.path %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>
+      <span>{% translate 'Billing' %}</span>
+    </a>
+    <a href="{{ url_settings }}" class="ja-nav__item{% if url_settings and url_settings in request.path %} is-active{% endif %}">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>{% translate 'Settings' %}</span>
     </a>
 
-    {% if available_apps %}
-    {% for app in available_apps %}
-    <div class="ja-nav__group">
-      <div class="ja-nav__label">{{ app.name }}</div>
-      {% for model in app.models %}
-      {% if model.admin_url %}
-      <a href="{{ model.admin_url }}" class="ja-nav__item{% if model.admin_url in request.path %} is-active{% endif %}">
-        {{ model.name }}
-      </a>
-      {% endif %}
-      {% endfor %}
-    </div>
-    {% endfor %}
-    {% endif %}
+    <p class="ja-nav__label">{% translate 'More' %}</p>
+    <a href="{{ url_brands }}" class="ja-nav__item ja-nav__item--sub{% if url_brands and url_brands in request.path %} is-active{% endif %}"><span>{% translate 'Brands' %}</span></a>
+    <a href="{{ url_categories }}" class="ja-nav__item ja-nav__item--sub{% if url_categories and url_categories in request.path %} is-active{% endif %}"><span>{% translate 'Categories' %}</span></a>
+    <a href="{{ url_bookings }}" class="ja-nav__item ja-nav__item--sub{% if url_bookings and url_bookings in request.path %} is-active{% endif %}"><span>{% translate 'Service Bookings' %}</span></a>
+    <a href="{{ url_queries }}" class="ja-nav__item ja-nav__item--sub{% if url_queries and url_queries in request.path %} is-active{% endif %}"><span>{% translate 'Contact Queries' %}</span></a>
+    <a href="{{ url_hero }}" class="ja-nav__item ja-nav__item--sub{% if url_hero and url_hero in request.path %} is-active{% endif %}"><span>{% translate 'Hero Slides' %}</span></a>
+    <a href="{{ url_newsletter }}" class="ja-nav__item ja-nav__item--sub{% if url_newsletter and url_newsletter in request.path %} is-active{% endif %}"><span>{% translate 'Newsletter' %}</span></a>
+    <a href="{{ url_visits }}" class="ja-nav__item ja-nav__item--sub{% if url_visits and url_visits in request.path %} is-active{% endif %}"><span>{% translate 'Site Visits' %}</span></a>
   </nav>
+
+  <div class="ja-side-foot">
+    <a href="/" target="_blank" rel="noopener" class="ja-side-store">
+      <svg class="ja-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+      <span>{% translate 'View Storefront' %}</span>
+    </a>
+  </div>
 </aside>
